@@ -7,9 +7,9 @@ Created on Tue May 28 12:44:31 2019
 @author: jonathanacoltzirojas
 """
 import numpy as N
+import numpy
 import matplotlib.pyplot as plt
 import matplotlib
-import numpy
 from matplotlib import pyplot, cm
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -65,9 +65,6 @@ def show_water( u, img = None, ax = None):
 
     plt.pause(.1)
     return img, ax
-
-    
-
 
 
 def build_up_b(rho, dt, dx, dy, u, v):
@@ -248,17 +245,13 @@ while udiff > .001:
     
     udiff = (numpy.sum(u) - numpy.sum(un)) / numpy.sum(u)
     stepcount += 1
+    
 print(stepcount)
 fig = pyplot.figure(figsize = (11,7))
-
 pyplot.quiver(X[::3, ::3], Y[::3, ::3], u[::3, ::3], v[::3, ::3])
 
 img, ax = show_water(u)
-
 img = show_water(u, img = img, ax = ax)
-
-
-
 
 #- Draw image:
 
