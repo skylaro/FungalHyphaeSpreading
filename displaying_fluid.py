@@ -5,6 +5,7 @@
 Created on Tue May 28 12:44:31 2019
 
 @author: jonathanacoltzirojas
+@author: 12 step navier stokes
 """
 import numpy as N
 import numpy
