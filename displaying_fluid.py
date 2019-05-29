@@ -15,7 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 
-def show_water( u, img = None, ax = None):
+def show_water( u,v, img = None, ax = None):
     """ This is the animation of the CA for fluid dynamics.
     in this method we make a 14 by 14 figure that is the shape of the channel. From our
     research on the Navier Equations we use U to show the what the current state of the water motion it is in.
@@ -24,8 +24,8 @@ def show_water( u, img = None, ax = None):
     
     
     """
-    length = 14
-    width = 14
+    length = 41
+    width = 41
     data = N.zeros((length, width, 3), dtype='f')
 
 
@@ -50,8 +50,7 @@ def show_water( u, img = None, ax = None):
 
         plt.pause(2)
 
-    data[:,:,0] = u[::3, ::3] /max(N.ravel(u[::3, ::3]))          #blue
-    #- Draw image:
+    data[:,:,0] = (u[::1, ::1]**2 + v[::1,::1]**2)**.5 /max(N.ravel((u[::1, ::1]**2 + v[::1,::1]**2)**.5))  #- Draw image:
     
     img = ax.imshow(data, interpolation='none',
                 extent=[0, width, 0, length],
@@ -65,6 +64,10 @@ def show_water( u, img = None, ax = None):
 
     plt.pause(.1)
     return img, ax
+
+    
+
+
 
 
 def build_up_b(rho, dt, dx, dy, u, v):
@@ -250,8 +253,8 @@ print(stepcount)
 fig = pyplot.figure(figsize = (11,7))
 pyplot.quiver(X[::3, ::3], Y[::3, ::3], u[::3, ::3], v[::3, ::3])
 
-img, ax = show_water(u)
-img = show_water(u, img = img, ax = ax)
+img, ax = show_water(u, v)
+img = show_water(u, v,img = img, ax = ax)
 
 #- Draw image:
 
