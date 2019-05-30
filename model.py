@@ -9,17 +9,15 @@ Each cell uses the following parameters:
 These values change as mass is pushed through the pipe.
 '''
 
+from graphics import *
 import numpy as np
 
-# Grid for fluid simulation
+# Grid for fluid simulation, containing momentum, pressure, and density
 M = 40
 N = 40
-
 grid = np.zeros((M,N,3))
 
-# 2D linear convection equation
-def linearConvection(c, x, dx, t, dt):
-	return f(x) - c * (dt / dx) * (f(x) - f(x-1))forwardDiff() + c * forwardDiff()
+
 
 # Finds value of Poisson's equation. If x == 0, this becomes Laplace's equation.
 def poisson(x):
@@ -27,13 +25,13 @@ def poisson(x):
 
 # Discretized Navier-Stokes momentum/pressure equations. 'F' is a constant horizontal flow variable.
 def navierStokes(F,i,j):
-	grid[i,j,0] = grid[i,j,0] - (grid[i,j,0] * (dt / dx) * (grid[i,j,0] - grid[i-1,j,0])) - 
+	grid[i,j,0] = grid[i,j,0] - (grid[i,j,0] * (dt / dx) * (grid[i,j,0] - grid[i-1,j,0])) -
 				    (grid[i,j,1] * (dt / dy) * (grid[i,j,0] - grid[i,j-1,0])) -
 				    ((dt / (2 * p * dx)) * (grid[i+1,j,2] - grid[i-1,j,2])) +
 				    (v * ((dt/dx**2) * (grid[i+1,j,0] - 2 * grid[i,j,0] + grid[i-1,j,0])) +
 					 ((dt/dy**2) * (grid[i,j+1,0] - 2 * grid[i,j,0] + grid[i,j-1,0])))+
 				    dt * F
-	grid[i,j,1] = grid[i,j,1] - (grid[i,j,0] * (dt / dx) * (grid[i,j,1] - grid[i-1,j,1])) - 
+	grid[i,j,1] = grid[i,j,1] - (grid[i,j,0] * (dt / dx) * (grid[i,j,1] - grid[i-1,j,1])) -
 				    (grid[i,j,1] * (dt / dy) * (grid[i,j,1] - grid[i,j-1,1])) -
 				    ((dt / (2 * p * dy)) * (grid[i,j+1,2] - grid[i,j-1,2])) +
 				    (v * ((dt/dx**2) * (grid[i+1,j,1] - 2 * grid[i,j,1] + grid[i-1,j,1])) +
@@ -45,3 +43,10 @@ def navierStokes(F,i,j):
 # Returns the dynamic viscosity of water, given a temperature value (in Celsius)
 def viscosity(t):
 	return 2.414e-5 * 10**(247.8/(t + 133.15))
+
+# Returns water shade based on density value
+def denToCol(d):
+
+# Sets up graphics window
+def setupGraphics():
+	w = GraphWin(width=200, height=200)
