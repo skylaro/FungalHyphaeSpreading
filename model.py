@@ -8,8 +8,6 @@ Each cell uses the following parameters:
 
 These values change as mass is pushed through the pipe.
 '''
-
-from graphics import *
 import numpy as np
 
 # Grid for fluid simulation, containing momentum, pressure, and density
@@ -17,6 +15,13 @@ M = 40
 N = 40
 grid = np.zeros((M,N,3))
 
+# Fluid constants
+dx = 
+dy = 
+dt = 
+T = 10
+d = 
+v = viscosity(T)
 
 
 # Finds value of Poisson's equation. If x == 0, this becomes Laplace's equation.
@@ -25,7 +30,7 @@ def poisson(x):
 
 # Discretized Navier-Stokes momentum/pressure equations. 'F' is a constant horizontal flow variable.
 def navierStokes(F,i,j):
-	grid[i,j,0] = grid[i,j,0] - (grid[i,j,0] * (dt / dx) * (grid[i,j,0] - grid[i-1,j,0])) -
+	grid[i,j,0] = grid[i,j,0] - (grid[i,j,0] * dt / dx) * (grid[i,j,0] - grid[i-1,j,0])) -
 				    (grid[i,j,1] * (dt / dy) * (grid[i,j,0] - grid[i,j-1,0])) -
 				    ((dt / (2 * p * dx)) * (grid[i+1,j,2] - grid[i-1,j,2])) +
 				    (v * ((dt/dx**2) * (grid[i+1,j,0] - 2 * grid[i,j,0] + grid[i-1,j,0])) +
@@ -44,8 +49,9 @@ def navierStokes(F,i,j):
 def viscosity(t):
 	return 2.414e-5 * 10**(247.8/(t + 133.15))
 
-# Returns water shade based on density value
-def denToCol(d):
+# Water density given a Celsius temperature (DIPPR105 equation)
+def density(t):
+	return 0.14395 / 0.0112 ** (1 + (1 - ((t + 273.15) / 649.727)) ** 0.05107)
 
 # Sets up graphics window
 def setupGraphics():
