@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Mushroom model from book.
 
@@ -75,9 +76,9 @@ DEAD2 = 8
 INERT = 9
 
 # Update Probabilities
-probSporeToHyphae = 0
-probMushroom = 0
-probSpread = 0
+probSporeToHyphae = 0.5
+probMushroom = 0.5
+probSpread = 0.5
 
 # Grid initialization
 probSpore = 0.5
