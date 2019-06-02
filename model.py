@@ -62,7 +62,8 @@ ality.” McIlvainea, 10: 24-3557-62.
 
 import numpy as np
 import random
-
+#import interface
+import matplotlib.pyplot as plt
 # Cell States
 EMPTY = 0
 SPORE = 1
@@ -82,31 +83,174 @@ probSpread = 0.5
 
 # Grid initialization
 probSpore = 0.5
-m = 20
-n = 20
-grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore])
+m = 10
+n = 10
+#grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore])
+grid = np.zeros((m,n,4))
+
+grid[:,:,2] = 1
+grid[int(m/2),int(n/2),:] = 0
+grid[int(m/2),int(n/2),0] = 1
 
 # State diagram on p. 717
-def changeState(i, j):
-    if grid[i,j] == SPORE:
+def changeState(gridCopy,i, j):
+    if gridCopy[i,j,0] == SPORE:
         if random.random() < probSporeToHyphae:
-            grid[i, j] = YOUNG
-    elif grid[i,j] == YOUNG:
+            grid[i, j,0] = YOUNG
+            grid[i, j,1] = .20
+            grid[i, j,2] = .20
+            grid[i, j,3] = .20
+            
+            
+    elif gridCopy[i,j,0] == YOUNG:
         grid[i,j] = MATURING
-    elif grid[i,j] == MATURING:
+        grid[i, j,1] = .7
+        grid[i, j,2] = .7
+        grid[i, j,3] = .7
+        
+    elif gridCopy[i,j,0] == MATURING:
         if random.random() < probMushroom:
-            grid[i, j] = MUSHROOMS
+            grid[i, j,0] = MUSHROOMS
+            grid[i, j,1] = 1
+            grid[i, j,2] = 1
+            grid[i, j,3] = 1
+            
+            
         else:
-            grid[i, j] = OLDER
-    elif grid[i,j] == MUSHROOMS or grid[i,j] == OLDER:
+            grid[i, j,0] = OLDER
+            grid[i, j,1] = .7
+            grid[i, j,2] = .7
+            grid[i, j,3] = .7
+            
+    elif gridCopy[i,j,0] == MUSHROOMS or gridCopy[i,j,0] == OLDER:
         grid[i,j] = DECAYING
-    elif grid[i,j] == DECAYING:
+        grid[i, j,1] = .60
+        grid[i, j,2] = .60
+        grid[i, j,3] = .7
+    elif gridCopy[i,j,0] == DECAYING:
         grid[i,j] = DEAD1
-    elif grid[i,j] == DEAD1:
+        grid[i, j,1] = .50
+        grid[i, j,2] = .50
+        grid[i, j,3] = .1
+        
+    elif gridCopy[i,j,0] == DEAD1:
         grid[i,j] = DEAD2
-    elif grid[i,j] == DEAD2:
+        grid[i, j,1] = 0
+        grid[i, j,2] = .1
+        grid[i, j,3] = 0
+    elif gridCopy[i,j,0] == DEAD2:
         grid[i,j] = EMPTY
-    elif grid[i,j] == EMPTY:
-        neighborIsYoung = grid[i-1 : i+1, j-1 : j+1]
-        if random.random() < probSpread and neighborIsYoung:
-            grid[i, j] = YOUNG
+        grid[i, j,1] = 1
+        grid[i, j,2] = 1
+        grid[i, j,3] = 0
+    elif gridCopy[i,j,0] == EMPTY:
+        neighborIsYoung = isYoungNear(i, j)
+        if (random.random() < probSpread) and neighborIsYoung:
+            grid[i, j,0] = YOUNG
+            
+def isYoungNear(i, j):
+    #checks bottom
+    if(i - 1 >= 0):
+        if grid[i - 1, j,0] == YOUNG:
+            return True
+        if(j - 1 >= 0):
+            if grid[i - 1, j - 1,0] == YOUNG:
+                return True
+        if(j + 1 < n):
+            if grid[i - 1, j + 1,0] == YOUNG:
+                return True
+    
+    #checks top
+    if(i + 1 < m):
+        if grid[i + 1, j,0] == YOUNG:
+            return True
+        if(j - 1 >= 0):
+            if grid[i + 1, j - 1,0] == YOUNG:
+                return True
+        if(j + 1 < n):
+            if grid[i + 1, j + 1,0] == YOUNG:
+                return True
+    #check middle
+    if(j - 1 >= 0):
+        if grid[i, j - 1,0] == YOUNG:
+            return True
+    if(j + 1 < n):
+        if grid[i, j + 1,0] == YOUNG:
+            return True   
+    
+    return False
+        
+                                    
+def simDrive():
+    simDuration = 5
+    timeStep = []
+    gridCopy = grid
+    img, ax = show_grid(grid)
+    for  ith in range(simDuration):
+        for i in range(m):
+            for j in range(n):
+                changeState(gridCopy, i,j)
+                img, ax = show_grid(grid, img , ax)
+                
+        gridCopy = grid
+        #currentGrid = np.copy(grid)
+        #timeStep.append(currentGrid)
+        #interface.animate(currentGrid)
+        print(ith)
+        print(grid[:,:,0])
+def show_grid(gridField, img = None, ax = None):
+    """ This is the animation of the CA for fluid dynamics.
+    in this method we make a 14 by 14 figure that is the shape of the channel. From our
+    research on the Navier Equations we use U to show the what the current state of the water motion it is in.
+    Gray means close to zero V.
+    
+    
+    
+    """
+    length = m
+    width = n
+    data = np.zeros((length, width, 3), dtype='f')
+
+    color = np.array([[0,255,0],[0,0,0],[25,25,25],[105,105,105],[255,255,255],[105,105,105],[245,245,220],[165,42,42],[0,100,0],[255,255,0]])
+    #- Create figure and axes:
+
+    
+
+
+    #- Set first display data values:
+    data[:,:, 0] = color[0,0] /255       #gray
+    data[:,:, 1] = color[0,1] /255       #gray
+    data[:,:, 2] = color[0,2] /255      #gray
+    
+    #if the img is not set yet display initial values of no motion
+    if img is None:
+        fig = plt.figure()
+        ax = fig.add_axes( (0, .9, 1, 0), frameon=False )
+
+        #- Draw image:
+
+        img = ax.imshow(data, interpolation='none',
+                extent=[0, width, 0, length],
+                aspect="auto",
+                zorder=0)
+
+        plt.pause(2)
+
+    
+    #- Draw image:
+    data[:,:,:] = grid[:,:,1:]
+    img = ax.imshow(data, interpolation='none',
+                extent=[0, width, 0, length],
+                aspect="auto",
+                zorder=0)
+
+    img.set_data(data)
+
+    ax.axis('off')
+    plt.show()
+    
+    return img, ax
+
+
+simDrive()
+    
