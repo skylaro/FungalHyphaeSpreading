@@ -111,6 +111,29 @@ def q1c():
     grid[int(m/2), int(n * 1/3),0] = 1
     grid[int(m/2), int(n * 2/3),0] = 1
 
+"""
+Answering question 1d
+where the spore grows along the arc of the barrier
+"""
+def q1d():
+    #the spore
+    grid[int(m/2), int(n * 1/3),:] = 0
+    grid[int(m/2), int(n * 1/3),0] = 1
+    
+    #the barrier
+    grid[int(m/2), int(n * 2/3),0] = 9
+    grid[int(m/2)+1, int(n * 2/3),0] = 9
+    grid[int(m/2)+1, int(n * 2/3)-1,0] = 9
+    grid[int(m/2)+1, int(n * 2/3)+1,0] = 9
+    grid[int(m/2)-1, int(n * 2/3)-1,0] = 9
+    grid[int(m/2)-1, int(n * 2/3)+1,0] = 9
+    grid[int(m/2)-1, int(n * 2/3)-1,0] = 9
+    grid[int(m/2), int(n * 2/3)-1,0] = 9
+    grid[int(m/2)-1, int(n * 2/3),0] = 9
+    
+    
+
+
 # State diagram on p. 717
 def changeState(gridCopy,i, j):
     if gridCopy[i,j,0] == SPORE:
@@ -120,7 +143,7 @@ def changeState(gridCopy,i, j):
             grid[i, j,2] = .30
             grid[i, j,3] = .30
     elif gridCopy[i,j,0] == YOUNG:
-        grid[i,j] = MATURING #Light Grey 178,178,178
+        grid[i,j, 0] = MATURING #Light Grey 178,178,178
         grid[i, j,1] = .85
         grid[i, j,2] = .85
         grid[i, j,3] = .85
@@ -136,22 +159,22 @@ def changeState(gridCopy,i, j):
             grid[i, j,2] = .85
             grid[i, j,3] = .85
     elif gridCopy[i,j,0] == MUSHROOMS or gridCopy[i,j,0] == OLDER:
-        grid[i,j] = DECAYING #Tan ---- 204,127,51
+        grid[i,j, 0] = DECAYING #Tan ---- 204,127,51
         grid[i, j,1] = .80
         grid[i, j,2] = .50
         grid[i, j,3] = .2
     elif gridCopy[i,j,0] == DECAYING:
-        grid[i,j] = DEAD1 #Brown ---- 178,51,0
+        grid[i,j, 0] = DEAD1 #Brown ---- 178,51,0
         grid[i, j,1] = .70
         grid[i, j,2] = .20
         grid[i, j,3] = .1
     elif gridCopy[i,j,0] == DEAD1:
-        grid[i,j] = DEAD2 #Dark Green ----0 102 0
+        grid[i,j, 0] = DEAD2 #Dark Green ----0 102 0
         grid[i, j,1] = 0
         grid[i, j,2] = .4
         grid[i, j,3] = 0
     elif gridCopy[i,j,0] == DEAD2:
-        grid[i,j] = EMPTY #light Green 0,255,0
+        grid[i,j, 0] = EMPTY #light Green 0,255,0
         grid[i, j,1] = 0
         grid[i, j,2] = 1
         grid[i, j,3] = 0
@@ -162,6 +185,10 @@ def changeState(gridCopy,i, j):
             grid[i, j,1] = .20
             grid[i, j,2] = .20
             grid[i, j,3] = .20
+    elif gridCopy[i,j,0] == INERT:
+        grid[i, j,1] = 1
+        grid[i, j,2] = 0
+        grid[i, j,3] = 0
 
 #checks gridCopy to see if any neighbors are young
 #looks using the moore method
@@ -190,10 +217,10 @@ def isYoungNear(gridCopy,i, j):
                 return True
     #check middle
     if(j - 1 >= 0):
-        if grid[i, j - 1,0] == YOUNG:
+        if gridCopy[i, j - 1,0] == YOUNG:
             return True
     if(j + 1 < n):
-        if grid[i, j + 1,0] == YOUNG:
+        if gridCopy[i, j + 1,0] == YOUNG:
             return True
 
     return False
@@ -202,12 +229,16 @@ def isYoungNear(gridCopy,i, j):
 #drive for the simulation
 #for efficiency i commented out the plotting
 
-def simDrive( simDur = 30):
+def simDrive(q , simDur = 30):
     simDuration = simDur
     timeStep = []
     
-    #q1c()
-    q1b()
+    if(q == 1):
+        q1b()
+    elif(q == 2):
+        q1c()
+    elif(q == 3):
+        q1d()
     
     gridCopy = np.copy(grid)
     #print(gridCopy[:,:,0])
@@ -275,7 +306,8 @@ def show_grid(gridField, img = None, ax = None):
 
     ax.axis('off')
     plt.show()
-    plt.pause(1.5)
+    #plt.pause(1.5)
+    plt.waitforbuttonpress()
     return img, ax
 
 """Func to init the inert cells
@@ -290,4 +322,4 @@ def initInertGrid(gridCopy):
     #
     return None
 
-simDrive()
+simDrive(3)
