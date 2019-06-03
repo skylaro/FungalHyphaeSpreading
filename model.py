@@ -83,8 +83,8 @@ probSpread = 0.5
 
 # Grid initialization
 probSpore = 0.5
-m = 10
-n = 10
+m = 30
+n = 30
 #grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore])
 grid = np.zeros((m,n,4))
 
@@ -94,6 +94,7 @@ grid[int(m/2),int(n/2),0] = 1
 
 # State diagram on p. 717
 def changeState(gridCopy,i, j):
+    #
     if gridCopy[i,j,0] == SPORE:
         if random.random() < probSporeToHyphae:
             grid[i, j,0] = YOUNG
@@ -144,31 +145,35 @@ def changeState(gridCopy,i, j):
         grid[i, j,2] = 1
         grid[i, j,3] = 0
     elif gridCopy[i,j,0] == EMPTY:
-        neighborIsYoung = isYoungNear(i, j)
+        neighborIsYoung = isYoungNear(gridCopy,i, j)
         if (random.random() < probSpread) and neighborIsYoung:
             grid[i, j,0] = YOUNG
             
-def isYoungNear(i, j):
+
+
+#checks gridCopy to see if any neibors are young
+#looks a van neuman
+def isYoungNear(gridCopy,i, j):
     #checks bottom
     if(i - 1 >= 0):
-        if grid[i - 1, j,0] == YOUNG:
+        if gridCopy[i - 1, j,0] == YOUNG:
             return True
         if(j - 1 >= 0):
-            if grid[i - 1, j - 1,0] == YOUNG:
+            if gridCopy[i - 1, j - 1,0] == YOUNG:
                 return True
         if(j + 1 < n):
-            if grid[i - 1, j + 1,0] == YOUNG:
+            if gridCopy[i - 1, j + 1,0] == YOUNG:
                 return True
     
     #checks top
     if(i + 1 < m):
-        if grid[i + 1, j,0] == YOUNG:
+        if gridCopy[i + 1, j,0] == YOUNG:
             return True
         if(j - 1 >= 0):
-            if grid[i + 1, j - 1,0] == YOUNG:
+            if gridCopy[i + 1, j - 1,0] == YOUNG:
                 return True
         if(j + 1 < n):
-            if grid[i + 1, j + 1,0] == YOUNG:
+            if gridCopy[i + 1, j + 1,0] == YOUNG:
                 return True
     #check middle
     if(j - 1 >= 0):
@@ -180,24 +185,33 @@ def isYoungNear(i, j):
     
     return False
         
-                                    
+      
+#drive for the simulation 
+#for efficiency i commented out the plotting 
+                                                                 
 def simDrive():
-    simDuration = 5
+    simDuration = 40
     timeStep = []
-    gridCopy = grid
+    gridCopy = np.copy(grid)
+    #print(gridCopy[:,:,0])
     img, ax = show_grid(grid)
     for  ith in range(simDuration):
         for i in range(m):
             for j in range(n):
                 changeState(gridCopy, i,j)
-                img, ax = show_grid(grid, img , ax)
                 
-        gridCopy = grid
+        #print(ith)
+        #print(grid[:,:,0])
+        #print(gridCopy[:,:,0])
+        
+        
+        gridCopy = np.copy(grid)
+        img, ax = show_grid(grid, img , ax)        
+        
         #currentGrid = np.copy(grid)
         #timeStep.append(currentGrid)
         #interface.animate(currentGrid)
-        print(ith)
-        print(grid[:,:,0])
+        #print(grid[:,:,0])
 def show_grid(gridField, img = None, ax = None):
     """ This is the animation of the CA for fluid dynamics.
     in this method we make a 14 by 14 figure that is the shape of the channel. From our
@@ -218,14 +232,14 @@ def show_grid(gridField, img = None, ax = None):
 
 
     #- Set first display data values:
-    data[:,:, 0] = color[0,0] /255       #gray
-    data[:,:, 1] = color[0,1] /255       #gray
-    data[:,:, 2] = color[0,2] /255      #gray
+    data[:,:, 0] = color[0,0] /255       
+    data[:,:, 1] = color[0,1] /255     
+    data[:,:, 2] = color[0,2] /255      
     
     #if the img is not set yet display initial values of no motion
     if img is None:
         fig = plt.figure()
-        ax = fig.add_axes( (0, .9, 1, 0), frameon=False )
+        ax = fig.add_axes( (0, 0, .5, .5), frameon=False )
 
         #- Draw image:
 
@@ -248,7 +262,7 @@ def show_grid(gridField, img = None, ax = None):
 
     ax.axis('off')
     plt.show()
-    
+    plt.pause(1)
     return img, ax
 
 
