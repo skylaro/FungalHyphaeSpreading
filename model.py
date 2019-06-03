@@ -62,6 +62,7 @@ ality.” McIlvainea, 10: 24-3557-62.
 
 import numpy as np
 import random
+
 #import interface
 import matplotlib.pyplot as plt
 
@@ -99,29 +100,28 @@ grid[int(m/2),int(n/2),0] = 1  #set the the center state to be SPORE
 
 # State diagram on p. 717
 def changeState(gridCopy,i, j):
-    #
     if gridCopy[i,j,0] == SPORE:
         if random.random() < probSporeToHyphae:
             grid[i, j,0] = YOUNG #DarkGrey 51,51,51
             grid[i, j,1] = .20
             grid[i, j,2] = .20
-            grid[i, j,3] = .20            
+            grid[i, j,3] = .20
     elif gridCopy[i,j,0] == YOUNG:
         grid[i,j] = MATURING #Light Grey 178,178,178
         grid[i, j,1] = .85
         grid[i, j,2] = .85
-        grid[i, j,3] = .85       
+        grid[i, j,3] = .85
     elif gridCopy[i,j,0] == MATURING:
         if random.random() < probMushroom:
             grid[i, j,0] = MUSHROOMS #White 255,255,255
             grid[i, j,1] = 1
             grid[i, j,2] = 1
-            grid[i, j,3] = 1            
+            grid[i, j,3] = 1
         else:
             grid[i, j,0] = OLDER #Light Grey 178,178,178
             grid[i, j,1] = .85
             grid[i, j,2] = .85
-            grid[i, j,3] = .85            
+            grid[i, j,3] = .85
     elif gridCopy[i,j,0] == MUSHROOMS or gridCopy[i,j,0] == OLDER:
         grid[i,j] = DECAYING #Tan ---- 204,127,51
         grid[i, j,1] = .80
@@ -131,7 +131,7 @@ def changeState(gridCopy,i, j):
         grid[i,j] = DEAD1 #Brown ---- 178,51,0
         grid[i, j,1] = .70
         grid[i, j,2] = .20
-        grid[i, j,3] = .1        
+        grid[i, j,3] = .1
     elif gridCopy[i,j,0] == DEAD1:
         grid[i,j] = DEAD2 #Dark Green ----0 102 0
         grid[i, j,1] = 0
@@ -149,8 +149,6 @@ def changeState(gridCopy,i, j):
             grid[i, j,1] = .20
             grid[i, j,2] = .20
             grid[i, j,3] = .20
-            
-
 
 #checks gridCopy to see if any neighbors are young
 #looks using the van neuman method
@@ -165,7 +163,7 @@ def isYoungNear(gridCopy,i, j):
         if(j + 1 < n):
             if gridCopy[i - 1, j + 1,0] == YOUNG:
                 return True
-    
+
     #checks top
     if(i + 1 < m):
         if gridCopy[i + 1, j,0] == YOUNG:
@@ -182,14 +180,14 @@ def isYoungNear(gridCopy,i, j):
             return True
     if(j + 1 < n):
         if grid[i, j + 1,0] == YOUNG:
-            return True   
-    
+            return True
+
     return False
-        
-      
-#drive for the simulation 
-#for efficiency i commented out the plotting 
-                                                                 
+
+
+#drive for the simulation
+#for efficiency i commented out the plotting
+
 def simDrive():
     simDuration = 40
     timeStep = []
@@ -200,25 +198,25 @@ def simDrive():
         for i in range(m):
             for j in range(n):
                 changeState(gridCopy, i,j)
-        
-        
+
+
         gridCopy = np.copy(grid)
-        img, ax = show_grid(grid, img , ax)        
-        
+        img, ax = show_grid(grid, img , ax)
+
         #currentGrid = np.copy(grid)
         timeStep.append(gridCopy)
         #interface.animate(currentGrid)
         #print(grid[:,:,0])
-        
-        
+
+
 def show_grid(gridField, img = None, ax = None):
     """ This is the animation of the CA for fluid dynamics.
     in this method we make a 14 by 14 figure that is the shape of the channel. From our
     research on the Navier Equations we use U to show the what the current state of the water motion it is in.
     Gray means close to zero V.
-    
-    
-    
+
+
+
     """
     length = m
     width = n
@@ -227,12 +225,12 @@ def show_grid(gridField, img = None, ax = None):
     color = np.array([[0,255,0],[0,0,0],[25,25,25],[105,105,105],[255,255,255],[105,105,105],[245,245,220],[165,42,42],[0,100,0],[255,255,0]])
     #- Create figure and axes:
 
-    
+
     #- Set first display data values:
-    data[:,:, 0] = color[0,0] /255       
-    data[:,:, 1] = color[0,1] /255     
-    data[:,:, 2] = color[0,2] /255      
-    
+    data[:,:, 0] = color[0,0] /255
+    data[:,:, 1] = color[0,1] /255
+    data[:,:, 2] = color[0,2] /255
+
     #if the img is not set yet display initial values of no motion
     if img is None:
         fig = plt.figure()
@@ -247,7 +245,7 @@ def show_grid(gridField, img = None, ax = None):
 
         plt.pause(2)
 
-    
+
     #- Draw image:
     data[:,:,:] = grid[:,:,1:]
     img = ax.imshow(data, interpolation='none',
@@ -264,15 +262,14 @@ def show_grid(gridField, img = None, ax = None):
 
 """Func to init the inert cells
 
-Based on the textbook, we can inialize randomly, create patterns like 
+Based on the textbook, we can inialize randomly, create patterns like
 pavement on the roads, fountains in the center etc
 
 """
 def initInertGrid(gridCopy):
     # for i in range(m):
     #     for j in range(n):
-    #       
+    #
     return None
 
 simDrive()
-    
