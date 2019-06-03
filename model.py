@@ -64,7 +64,8 @@ import numpy as np
 import random
 #import interface
 import matplotlib.pyplot as plt
-# Cell States
+
+# Cell States Constant
 EMPTY = 0
 SPORE = 1
 YOUNG = 2
@@ -78,8 +79,8 @@ INERT = 9
 
 # Update Probabilities
 probSporeToHyphae = 0.5
-probMushroom = 0.5
-probSpread = 0.5
+probMushroom = 0.7
+probSpread = 0.35
 
 # Grid initialization
 probSpore = 0.5
@@ -89,9 +90,12 @@ n = 30
 #the 3 dimension is to store the (state, R, G, B)
 grid = np.zeros((m,n,4))
 
-grid[:,:,2] = 1
-grid[int(m/2),int(n/2),:] = 0
-grid[int(m/2),int(n/2),0] = 1
+grid[:,:,2] = 1 #set background to green
+grid[int(m/2),int(n/2),:] = 0  #set center of plot to be black/EMPTY
+grid[int(m/2),int(n/2),0] = 1  #set the the center state to be SPORE
+
+#grid[int(m)]
+
 
 # State diagram on p. 717
 def changeState(gridCopy,i, j):
@@ -104,9 +108,9 @@ def changeState(gridCopy,i, j):
             grid[i, j,3] = .20            
     elif gridCopy[i,j,0] == YOUNG:
         grid[i,j] = MATURING #Light Grey 178,178,178
-        grid[i, j,1] = .7
-        grid[i, j,2] = .7
-        grid[i, j,3] = .7        
+        grid[i, j,1] = .85
+        grid[i, j,2] = .85
+        grid[i, j,3] = .85       
     elif gridCopy[i,j,0] == MATURING:
         if random.random() < probMushroom:
             grid[i, j,0] = MUSHROOMS #White 255,255,255
@@ -115,9 +119,9 @@ def changeState(gridCopy,i, j):
             grid[i, j,3] = 1            
         else:
             grid[i, j,0] = OLDER #Light Grey 178,178,178
-            grid[i, j,1] = .7
-            grid[i, j,2] = .7
-            grid[i, j,3] = .7            
+            grid[i, j,1] = .85
+            grid[i, j,2] = .85
+            grid[i, j,3] = .85            
     elif gridCopy[i,j,0] == MUSHROOMS or gridCopy[i,j,0] == OLDER:
         grid[i,j] = DECAYING #Tan ---- 204,127,51
         grid[i, j,1] = .80
@@ -148,8 +152,8 @@ def changeState(gridCopy,i, j):
             
 
 
-#checks gridCopy to see if any neibors are young
-#looks a van neuman
+#checks gridCopy to see if any neighbors are young
+#looks using the van neuman method
 def isYoungNear(gridCopy,i, j):
     #checks bottom
     if(i - 1 >= 0):
@@ -196,10 +200,6 @@ def simDrive():
         for i in range(m):
             for j in range(n):
                 changeState(gridCopy, i,j)
-                
-        #print(ith)
-        #print(grid[:,:,0])
-        #print(gridCopy[:,:,0])
         
         
         gridCopy = np.copy(grid)
@@ -209,6 +209,8 @@ def simDrive():
         timeStep.append(gridCopy)
         #interface.animate(currentGrid)
         #print(grid[:,:,0])
+        
+        
 def show_grid(gridField, img = None, ax = None):
     """ This is the animation of the CA for fluid dynamics.
     in this method we make a 14 by 14 figure that is the shape of the channel. From our
@@ -226,8 +228,6 @@ def show_grid(gridField, img = None, ax = None):
     #- Create figure and axes:
 
     
-
-
     #- Set first display data values:
     data[:,:, 0] = color[0,0] /255       
     data[:,:, 1] = color[0,1] /255     
@@ -259,9 +259,20 @@ def show_grid(gridField, img = None, ax = None):
 
     ax.axis('off')
     plt.show()
-    plt.pause(1)
+    plt.pause(.5)
     return img, ax
 
+"""Func to init the inert cells
+
+Based on the textbook, we can inialize randomly, create patterns like 
+pavement on the roads, fountains in the center etc
+
+"""
+def initInertGrid(gridCopy):
+    # for i in range(m):
+    #     for j in range(n):
+    #       
+    return None
 
 simDrive()
     
