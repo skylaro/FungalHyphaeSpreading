@@ -86,6 +86,7 @@ probSpore = 0.5
 m = 30
 n = 30
 #grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore])
+#the 3 dimension is to store the (state, R, G, B)
 grid = np.zeros((m,n,4))
 
 grid[:,:,2] = 1
@@ -97,57 +98,53 @@ def changeState(gridCopy,i, j):
     #
     if gridCopy[i,j,0] == SPORE:
         if random.random() < probSporeToHyphae:
-            grid[i, j,0] = YOUNG
+            grid[i, j,0] = YOUNG #DarkGrey 51,51,51
             grid[i, j,1] = .20
             grid[i, j,2] = .20
-            grid[i, j,3] = .20
-            
-            
+            grid[i, j,3] = .20            
     elif gridCopy[i,j,0] == YOUNG:
-        grid[i,j] = MATURING
+        grid[i,j] = MATURING #Light Grey 178,178,178
         grid[i, j,1] = .7
         grid[i, j,2] = .7
-        grid[i, j,3] = .7
-        
+        grid[i, j,3] = .7        
     elif gridCopy[i,j,0] == MATURING:
         if random.random() < probMushroom:
-            grid[i, j,0] = MUSHROOMS
+            grid[i, j,0] = MUSHROOMS #White 255,255,255
             grid[i, j,1] = 1
             grid[i, j,2] = 1
-            grid[i, j,3] = 1
-            
-            
+            grid[i, j,3] = 1            
         else:
-            grid[i, j,0] = OLDER
+            grid[i, j,0] = OLDER #Light Grey 178,178,178
             grid[i, j,1] = .7
             grid[i, j,2] = .7
-            grid[i, j,3] = .7
-            
+            grid[i, j,3] = .7            
     elif gridCopy[i,j,0] == MUSHROOMS or gridCopy[i,j,0] == OLDER:
-        grid[i,j] = DECAYING
-        grid[i, j,1] = .60
-        grid[i, j,2] = .60
-        grid[i, j,3] = .7
-    elif gridCopy[i,j,0] == DECAYING:
-        grid[i,j] = DEAD1
-        grid[i, j,1] = .50
+        grid[i,j] = DECAYING #Tan ---- 204,127,51
+        grid[i, j,1] = .80
         grid[i, j,2] = .50
-        grid[i, j,3] = .1
-        
+        grid[i, j,3] = .2
+    elif gridCopy[i,j,0] == DECAYING:
+        grid[i,j] = DEAD1 #Brown ---- 178,51,0
+        grid[i, j,1] = .70
+        grid[i, j,2] = .20
+        grid[i, j,3] = .1        
     elif gridCopy[i,j,0] == DEAD1:
-        grid[i,j] = DEAD2
+        grid[i,j] = DEAD2 #Dark Green ----0 102 0
         grid[i, j,1] = 0
-        grid[i, j,2] = .1
+        grid[i, j,2] = .4
         grid[i, j,3] = 0
     elif gridCopy[i,j,0] == DEAD2:
-        grid[i,j] = EMPTY
-        grid[i, j,1] = 1
+        grid[i,j] = EMPTY #light Green 0,255,0
+        grid[i, j,1] = 0
         grid[i, j,2] = 1
         grid[i, j,3] = 0
     elif gridCopy[i,j,0] == EMPTY:
         neighborIsYoung = isYoungNear(gridCopy,i, j)
         if (random.random() < probSpread) and neighborIsYoung:
-            grid[i, j,0] = YOUNG
+            grid[i, j,0] = YOUNG #DarkGrey 51,51,51
+            grid[i, j,1] = .20
+            grid[i, j,2] = .20
+            grid[i, j,3] = .20
             
 
 
@@ -209,7 +206,7 @@ def simDrive():
         img, ax = show_grid(grid, img , ax)        
         
         #currentGrid = np.copy(grid)
-        #timeStep.append(currentGrid)
+        timeStep.append(gridCopy)
         #interface.animate(currentGrid)
         #print(grid[:,:,0])
 def show_grid(gridField, img = None, ax = None):
