@@ -80,32 +80,45 @@ INERT = 9
 
 # Update Probabilities
 probSporeToHyphae = 0.5
-probMushroom = 0.7
-probSpread = 0.35
+probMushroom = 0.5
+probSpread = 0.5
 
 # Grid initialization
 probSpore = 0.5
-m = 30
-n = 30
+m = 60
+n = 60
 #grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore])
 #the 3 dimension is to store the (state, R, G, B)
 grid = np.zeros((m,n,4))
-
 grid[:,:,2] = 1 #set background to green
-grid[int(m/2),int(n/2),:] = 0  #set center of plot to be black/EMPTY
-grid[int(m/2),int(n/2),0] = 1  #set the the center state to be SPORE
 
-#grid[int(m)]
+"""
+Answering question 1b
+where theres only one spore at the center of the grid
+"""
+def q1b():
+    grid[int(m/2),int(n/2),:] = 0  #set center of plot to be black/EMPTY
+    grid[int(m/2),int(n/2),0] = 1  #set the the center state to be SPORE
 
+
+"""
+Answering question 1c
+where theres two spore at the middle of the grid
+"""
+def q1c():
+    grid[int(m/2), int(n * 1/3),:] = 0
+    grid[int(m/2), int(n * 2/3),:] = 0
+    grid[int(m/2), int(n * 1/3),0] = 1
+    grid[int(m/2), int(n * 2/3),0] = 1
 
 # State diagram on p. 717
 def changeState(gridCopy,i, j):
     if gridCopy[i,j,0] == SPORE:
         if random.random() < probSporeToHyphae:
             grid[i, j,0] = YOUNG #DarkGrey 51,51,51
-            grid[i, j,1] = .20
-            grid[i, j,2] = .20
-            grid[i, j,3] = .20
+            grid[i, j,1] = .30
+            grid[i, j,2] = .30
+            grid[i, j,3] = .30
     elif gridCopy[i,j,0] == YOUNG:
         grid[i,j] = MATURING #Light Grey 178,178,178
         grid[i, j,1] = .85
@@ -151,22 +164,23 @@ def changeState(gridCopy,i, j):
             grid[i, j,3] = .20
 
 #checks gridCopy to see if any neighbors are young
-#looks using the van neuman method
+#looks using the moore method
 def isYoungNear(gridCopy,i, j):
     #checks bottom
-    if(i - 1 >= 0):
-        if gridCopy[i - 1, j,0] == YOUNG:
+    
+    if(i - 1 >= 0): 
+        if gridCopy[i - 1, j,0] == YOUNG: #check south
             return True
         if(j - 1 >= 0):
-            if gridCopy[i - 1, j - 1,0] == YOUNG:
+            if gridCopy[i - 1, j - 1,0] == YOUNG: #check SW
                 return True
         if(j + 1 < n):
-            if gridCopy[i - 1, j + 1,0] == YOUNG:
+            if gridCopy[i - 1, j + 1,0] == YOUNG: #check SE
                 return True
 
     #checks top
     if(i + 1 < m):
-        if gridCopy[i + 1, j,0] == YOUNG:
+        if gridCopy[i + 1, j,0] == YOUNG: 
             return True
         if(j - 1 >= 0):
             if gridCopy[i + 1, j - 1,0] == YOUNG:
@@ -188,9 +202,13 @@ def isYoungNear(gridCopy,i, j):
 #drive for the simulation
 #for efficiency i commented out the plotting
 
-def simDrive():
-    simDuration = 40
+def simDrive( simDur = 30):
+    simDuration = simDur
     timeStep = []
+    
+    #q1c()
+    q1b()
+    
     gridCopy = np.copy(grid)
     #print(gridCopy[:,:,0])
     img, ax = show_grid(grid)
@@ -234,7 +252,7 @@ def show_grid(gridField, img = None, ax = None):
     #if the img is not set yet display initial values of no motion
     if img is None:
         fig = plt.figure()
-        ax = fig.add_axes( (0, 0, .5, .5), frameon=False )
+        ax = fig.add_axes( (0, 0, 1, 1), frameon=False )
 
         #- Draw image:
 
@@ -243,7 +261,7 @@ def show_grid(gridField, img = None, ax = None):
                 aspect="auto",
                 zorder=0)
 
-        plt.pause(2)
+        plt.pause(1)
 
 
     #- Draw image:
@@ -257,7 +275,7 @@ def show_grid(gridField, img = None, ax = None):
 
     ax.axis('off')
     plt.show()
-    plt.pause(.5)
+    plt.pause(1.5)
     return img, ax
 
 """Func to init the inert cells
