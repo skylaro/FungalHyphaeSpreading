@@ -197,11 +197,15 @@ def changeState(gridCopy,i, j):
         grid[i,j] = DEAD1
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     '''
     Do Project 1 so that the length of time the hyphae are dead is probabilistic;
     and on the average, they are dead for two time steps.
     '''
+=======
+        
+>>>>>>> parent of bbdd1c1... Spore spawn adjustment
 =======
         
 >>>>>>> parent of bbdd1c1... Spore spawn adjustment
