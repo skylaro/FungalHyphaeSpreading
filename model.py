@@ -1,70 +1,39 @@
-# -*- coding: utf-8 -*-
 '''
-Mushroom model from book.
-
-Projects:
-Develop the simulation of this module using absorbing boundary conditions.
-Include a function to show the situation aboveground. Run the simulation
-employing various initial grids, as follows:
-    a.  As described in the module with various values of probSpore. Describe
-        the results.
-    b.  With exactly one spore in the middle. Verify that the figure seems to agree
-        with Figure 14.5.1.
-    c.  With exactly two spores that are several cells apart toward the middle.
-        Verify that the rings merge into the figure-eight pattern observed in na-
-        ture, as in Figure 14.5.2.
-    d.  With exactly one spore and a barrier. Verify that the results appear to
-        agree with the growth pattern in Figure 14.5.3.
-
-Do Project 1 where the probability of young hyphae spreading into a site is
-proportional to the number of neighbors that contain young hyphae.
-
-Adjust the simulation of this module so that new spores can form when
-mushrooms are present. Consider the following two possibilities:
-    a.  The probability that a cell can obtain a spore at the next time period is
-        equal to the percentage of mushrooms in the grid.
-    b.  A cell can obtain a spore at the next time period with a specified probabil-
-        ity provided one of its neighbors contains a mushroom.
-
-Do Project 1 so that the length of time the hyphae are dead is probabilistic;
-and on the average, they are dead for two time steps.
-
-Do Project 1 using periodic boundary conditions.
-
-Do Project 1 using reflecting boundary conditions.
-
-Do Project 1, where the neighbors of a cell include those cells to the north-
-east, southeast, southwest, and northwest.
+Mushroom model from book, using absorbing, reflecting, and periodic boundary conditions.
+S&S model was generated from information found in the following sources, which were also
+utilized in this model to augment that of S&S.
 
 References:
 Blackwell, Meredith. 2011. “The Fungi: 1, 2, 3. . . 5.1 Million Species?” American
-Journal of Botany 98(3): 426–438.
+    Journal of Botany 98(3): 426–438.
 Deacon, Jim. “The Microbial World—The Fungal Web.” Institute of Cell and Mo-
-lecular Biology and Biology Teaching Organization, University of Edinburgh.
-Archived. http://www.biology.ed.ac.uk/archive/jdeacon/microbes/fungalwe.htm
-(accessed January 1, 2013)
+    lecular Biology and Biology Teaching Organization, University of Edinburgh.
+    Archived. http://www.biology.ed.ac.uk/archive/jdeacon/microbes/fungalwe.htm
+    (accessed January 1, 2013)
 Gaylor, Richard J., and Kazume Nishidate. 1996. “Contagion in Excitable Media.”
-Modeling Nature: Cellular Automata Simulations with Mathematica. New York:
-TELOS/Springer-Verlag, pp. 155–171.
+    Modeling Nature: Cellular Automata Simulations with Mathematica. New York:
+    TELOS/Springer-Verlag, pp. 155–171.
 Illinois Extension Service. 1998. Department of Crop Sciences, University of Illi-
-nois– Urbana-Champaign. “Fairy Rings, Mushrooms and Puffballs.” Report on
-Plant Disease No. 403.
+    nois– Urbana-Champaign. “Fairy Rings, Mushrooms and Puffballs.” Report on
+    Plant Disease No. 403.
 Kimball, John W. 2012. ”Fungi.” http://users.rcn.com/jkimball.ma.ultranet/Biology
-Pages/F/Fungi.html (accessed January 1, 2013)
+    Pages/F/Fungi.html (accessed January 1, 2013)
 Kruszelnicki, Karl S. “Great Moments in Science—Fairy Rings.” Karl S. Kruszel-
-nicki Pty Ltd. http://www.abc.net.au/science/k2/moments/s297489.htm (accessed
-January 1, 2013)
+    nicki Pty Ltd. http://www.abc.net.au/science/k2/moments/s297489.htm (accessed
+    January 1, 2013)
 Lepp, Heino, and Murray Fagg. 2012. “The Mycelium.” Australian National Botanic
-Gardens. http://www.anbg.gov.au/fungi/mycelium.html (accessed January 1, 2013)
+    Gardens. http://www.anbg.gov.au/fungi/mycelium.html (accessed January 1, 2013)
 Rayner, Alan D. M. 1991. “Conflicting Flows: The Dynamics of Mycelial Territori-
-ality.” McIlvainea, 10: 24-3557-62.
+    ality.” McIlvainea, 10: 24-3557-62.
 '''
 
+from graphics import *
 import numpy as np
 import random
 
 #import interface
 import matplotlib.pyplot as plt
+import time
 
 # Cell States Constant
 EMPTY = 0
@@ -119,7 +88,7 @@ def q1d():
     #the spore
     grid[int(m/2), int(n * 1/3),:] = 0
     grid[int(m/2), int(n * 1/3),0] = 1
-    
+
     #the barrier
     grid[int(m/2), int(n * 2/3),0] = 9
     grid[int(m/2)+1, int(n * 2/3),0] = 9
@@ -130,116 +99,191 @@ def q1d():
     grid[int(m/2)-1, int(n * 2/3)-1,0] = 9
     grid[int(m/2), int(n * 2/3)-1,0] = 9
     grid[int(m/2)-1, int(n * 2/3),0] = 9
-    
-    
 
+
+
+winTitle = "Mushroom Simulation"
+cellWidth = 15
+m = 20
+n = 20
+winDims = (m, n)
+win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
+
+# Probability of spawning a spore. Used when initializing the grid and then for spawning spores from mushrooms.
+probSpore = 0.1
+
+# Rule used for spawning new spores from a mushroom.
+# 0 = All grid cells use probSpore, which is the mushroom coverage percentage.
+# 1 = A single cell uses probSpore, which is calculated based on number of mushroom neighbors.
+mushroomSporeSpawnRule = 0
+
+# Random grid is the default initialization
+grid = np.random.choice(a=[SPORE, EMPTY], size=winDims, p=[probSpore, 1-probSpore])
+
+# Other adjustables properties
+numTimeSteps = 400
+
+# Method to initialize a starting grid
+# RANDOM    = 0
+# SINGLE    = 1
+# DOUBLE    = 2
+# BOUNDARY  = 3
+def initGrid(type):
+
+    # Randomly placed spores, using probSpore
+    if type == 0:
+        grid = np.random.choice(a=[SPORE, EMPTY], size=winDims, p=[probSpore, 1-probSpore])
+
+    # Single spore in middle of grid
+    elif type == 1:
+        grid = np.ones(winDims) * EMPTY
+        grid[m / 2, n / 2] = SPORE
+
+    # Two spores separating each third of the grid
+    elif type == 2:
+        grid = np.ones(winDims) * EMPTY
+        grid[m / 3, n / 2] = SPORE
+        grid[2 * (m / 3), n / 2] = SPORE
+
+    # Single spore and impermeable barrier around grid
+    elif type == 3:
+        grid = np.ones(winDims) * EMPTY
+        grid[m / 2, n / 2] = SPORE
+        #...
+
+# Rather than using a spread constant, this method determines
+# whether spread occurs by using a multi-branch random walk,
+# similar to how mycelium actually spreads. 'dist' is the minimum
+# linear distance required for spread from a center point.
+# 'numTrials' is the number of random walks to generate before returning.
+def randomSpread(dist, numTrials):
+    sumDist = 0
+    for i in range(numTrials):
+        sumDist += 1
+    return (sumDist / numTrials) >= dist
 
 # State diagram on p. 717
 def changeState(gridCopy,i, j):
     if gridCopy[i,j,0] == SPORE:
         if random.random() < probSporeToHyphae:
-            grid[i, j,0] = YOUNG #DarkGrey 51,51,51
-            grid[i, j,1] = .30
-            grid[i, j,2] = .30
-            grid[i, j,3] = .30
-    elif gridCopy[i,j,0] == YOUNG:
-        grid[i,j, 0] = MATURING #Light Grey 178,178,178
-        grid[i, j,1] = .85
-        grid[i, j,2] = .85
-        grid[i, j,3] = .85
-    elif gridCopy[i,j,0] == MATURING:
+            grid[i, j] = YOUNG
+
+    elif grid[i,j] == YOUNG:
+        grid[i,j] = MATURING
+
+    elif grid[i,j] == MATURING:
         if random.random() < probMushroom:
-            grid[i, j,0] = MUSHROOMS #White 255,255,255
-            grid[i, j,1] = 1
-            grid[i, j,2] = 1
-            grid[i, j,3] = 1
+            grid[i, j] = MUSHROOMS
+
         else:
-            grid[i, j,0] = OLDER #Light Grey 178,178,178
-            grid[i, j,1] = .85
-            grid[i, j,2] = .85
-            grid[i, j,3] = .85
-    elif gridCopy[i,j,0] == MUSHROOMS or gridCopy[i,j,0] == OLDER:
-        grid[i,j, 0] = DECAYING #Tan ---- 204,127,51
-        grid[i, j,1] = .80
-        grid[i, j,2] = .50
-        grid[i, j,3] = .2
-    elif gridCopy[i,j,0] == DECAYING:
-        grid[i,j, 0] = DEAD1 #Brown ---- 178,51,0
-        grid[i, j,1] = .70
-        grid[i, j,2] = .20
-        grid[i, j,3] = .1
-    elif gridCopy[i,j,0] == DEAD1:
-        grid[i,j, 0] = DEAD2 #Dark Green ----0 102 0
-        grid[i, j,1] = 0
-        grid[i, j,2] = .4
-        grid[i, j,3] = 0
-    elif gridCopy[i,j,0] == DEAD2:
-        grid[i,j, 0] = EMPTY #light Green 0,255,0
-        grid[i, j,1] = 0
-        grid[i, j,2] = 1
-        grid[i, j,3] = 0
-    elif gridCopy[i,j,0] == EMPTY:
-        neighborIsYoung = isYoungNear(gridCopy,i, j)
-        if (random.random() < probSpread) and neighborIsYoung:
-            grid[i, j,0] = YOUNG #DarkGrey 51,51,51
-            grid[i, j,1] = .20
-            grid[i, j,2] = .20
-            grid[i, j,3] = .20
-    elif gridCopy[i,j,0] == INERT:
-        grid[i, j,1] = 1
-        grid[i, j,2] = 0
-        grid[i, j,3] = 0
+            grid[i, j] = OLDER
 
-#checks gridCopy to see if any neighbors are young
-#looks using the moore method
-def isYoungNear(gridCopy,i, j):
-    #checks bottom
-    
-    if(i - 1 >= 0): 
-        if gridCopy[i - 1, j,0] == YOUNG: #check south
-            return True
-        if(j - 1 >= 0):
-            if gridCopy[i - 1, j - 1,0] == YOUNG: #check SW
-                return True
-        if(j + 1 < n):
-            if gridCopy[i - 1, j + 1,0] == YOUNG: #check SE
-                return True
+    '''
+    Adjust the simulation of this module so that new spores can form when
+    mushrooms are present. Consider the following two possibilities:
+    a.  The probability that a cell can obtain a spore at the next time period is
+        equal to the percentage of mushrooms in the grid.
+    b.  A cell can obtain a spore at the next time period with a specified probabil-
+        ity provided one of its neighbors contains a mushroom.
+    '''
+    elif grid[i,j] == MUSHROOMS or grid[i,j] == OLDER:
+        grid[i,j] = DECAYING
 
-    #checks top
-    if(i + 1 < m):
-        if gridCopy[i + 1, j,0] == YOUNG: 
-            return True
-        if(j - 1 >= 0):
-            if gridCopy[i + 1, j - 1,0] == YOUNG:
-                return True
-        if(j + 1 < n):
-            if gridCopy[i + 1, j + 1,0] == YOUNG:
-                return True
-    #check middle
-    if(j - 1 >= 0):
-        if gridCopy[i, j - 1,0] == YOUNG:
-            return True
-    if(j + 1 < n):
-        if gridCopy[i, j + 1,0] == YOUNG:
-            return True
+    elif grid[i,j] == DECAYING:
+        grid[i,j] = DEAD1
 
-    return False
+    '''
+    Do Project 1 so that the length of time the hyphae are dead is probabilistic;
+    and on the average, they are dead for two time steps.
+    '''
+    elif grid[i,j] == DEAD1:
+        grid[i,j] = DEAD2
 
+    elif grid[i,j] == DEAD2:
+        grid[i,j] = EMPTY
+
+    elif grid[i,j] == EMPTY:
+        if (random.random() < probSpread) and isNeighborYoung(i,j):
+            grid[i, j] = YOUNG
+
+# Checks Moore neighborhood of cells for YOUNG values.
+# Assumes cell at [i, j] is already EMPTY
+'''
+Do Project 1 where the probability of young hyphae spreading into a site is
+proportional to the number of neighbors that contain young hyphae.
+'''
+def isNeighborYoung(i, j):
+    return YOUNG in grid[i - 1:i + 1,j - 1:j + 1]
+
+# Draw state to grid
+def drawState(d, x, y):
+	r = Point(cellWidth * x, cellWidth * y)
+	s = Point(cellWidth * x + cellWidth, cellWidth * y + cellWidth)
+	t = Rectangle(r,s)
+	t.setFill(colorFromState(d))
+	t.draw(win)
+
+# EMPTY: Light Green
+# SPORE: Black
+# YOUNG: Dark Grey
+# MATURING: Light Grey
+# MUSHROOMS: White
+# OLDER: Light Grey
+# DECAYING: Tan
+# DEAD1: Brown
+# DEAD2: Dark Green
+# INERT: Yellow
+def colorFromState(state):
+	if state == EMPTY:
+		return color_rgb(0,255,0)
+	if state == SPORE:
+		return color_rgb(0,0,0)
+	elif state == YOUNG:
+		return color_rgb(64,64,64)
+	elif state == MATURING or state == OLDER:
+		return color_rgb(192,192,192)
+	elif state == MUSHROOMS:
+		return color_rgb(255,255,255)
+	elif state == DECAYING:
+		return color_rgb(255,255,128)
+	elif state == DEAD1:
+		return color_rgb(128,128,0)
+	elif state == DEAD2:
+		return color_rgb(0,128,0)
+	elif state == INERT:
+		return color_rgb(255,255,0)
+
+# Main program
+
+#Start by drawing initial state
+for i in range(m):
+        for j in range(n):
+            drawState(grid[i,j], i, j)
+
+# Draw each state change for k number of timesteps
+for k in range(numTimeSteps):
+    #start = time.time()
+    for i in range(m):
+        for j in range(n):
+            changeState(i,j)
+            drawState(grid[i,j], i, j)
+    #end = time.time()
+    #time.sleep(animationTimestep - (end - start))
 
 #drive for the simulation
 #for efficiency i commented out the plotting
-
-def simDrive(q , simDur = 30):
-    simDuration = simDur
+'''
+def simDrive():
+    simDuration = 40
     timeStep = []
-    
+
     if(q == 1):
         q1b()
     elif(q == 2):
         q1c()
     elif(q == 3):
         q1d()
-    
+
     gridCopy = np.copy(grid)
     #print(gridCopy[:,:,0])
     img, ax = show_grid(grid)
@@ -322,4 +366,5 @@ def initInertGrid(gridCopy):
     #
     return None
 
-simDrive(3)
+simDrive()
+'''
