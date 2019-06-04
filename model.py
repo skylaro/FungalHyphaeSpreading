@@ -1,64 +1,32 @@
-# -*- coding: utf-8 -*-
 '''
-Mushroom model from book.
-
-Projects:
-Develop the simulation of this module using absorbing boundary conditions.
-Include a function to show the situation aboveground. Run the simulation
-employing various initial grids, as follows:
-    a.  As described in the module with various values of probSpore. Describe
-        the results.
-    b.  With exactly one spore in the middle. Verify that the figure seems to agree
-        with Figure 14.5.1.
-    c.  With exactly two spores that are several cells apart toward the middle.
-        Verify that the rings merge into the figure-eight pattern observed in na-
-        ture, as in Figure 14.5.2.
-    d.  With exactly one spore and a barrier. Verify that the results appear to
-        agree with the growth pattern in Figure 14.5.3.
-
-Do Project 1 where the probability of young hyphae spreading into a site is
-proportional to the number of neighbors that contain young hyphae.
-
-Adjust the simulation of this module so that new spores can form when
-mushrooms are present. Consider the following two possibilities:
-    a.  The probability that a cell can obtain a spore at the next time period is
-        equal to the percentage of mushrooms in the grid.
-    b.  A cell can obtain a spore at the next time period with a specified probabil-
-        ity provided one of its neighbors contains a mushroom.
-
-Do Project 1 so that the length of time the hyphae are dead is probabilistic;
-and on the average, they are dead for two time steps.
-
-Do Project 1 using periodic boundary conditions.
-
-Do Project 1 using reflecting boundary conditions.
-
-Do Project 1, where the neighbors of a cell include those cells to the north-
-east, southeast, southwest, and northwest.
+Mushroom model from book, using absorbing, reflecting, and periodic boundary conditions.
+S&S model was generated from information found in the following sources, which were also
+utilized in this model to augment that of S&S.
 
 References:
 Blackwell, Meredith. 2011. “The Fungi: 1, 2, 3. . . 5.1 Million Species?” American
-Journal of Botany 98(3): 426–438.
+    Journal of Botany 98(3): 426–438.
 Deacon, Jim. “The Microbial World—The Fungal Web.” Institute of Cell and Mo-
-lecular Biology and Biology Teaching Organization, University of Edinburgh.
-Archived. http://www.biology.ed.ac.uk/archive/jdeacon/microbes/fungalwe.htm
-(accessed January 1, 2013)
+    lecular Biology and Biology Teaching Organization, University of Edinburgh.
+    Archived. http://www.biology.ed.ac.uk/archive/jdeacon/microbes/fungalwe.htm
+    (accessed January 1, 2013)
 Gaylor, Richard J., and Kazume Nishidate. 1996. “Contagion in Excitable Media.”
-Modeling Nature: Cellular Automata Simulations with Mathematica. New York:
-TELOS/Springer-Verlag, pp. 155–171.
+    Modeling Nature: Cellular Automata Simulations with Mathematica. New York:
+    TELOS/Springer-Verlag, pp. 155–171.
 Illinois Extension Service. 1998. Department of Crop Sciences, University of Illi-
-nois– Urbana-Champaign. “Fairy Rings, Mushrooms and Puffballs.” Report on
-Plant Disease No. 403.
+    nois– Urbana-Champaign. “Fairy Rings, Mushrooms and Puffballs.” Report on
+    Plant Disease No. 403.
 Kimball, John W. 2012. ”Fungi.” http://users.rcn.com/jkimball.ma.ultranet/Biology
-Pages/F/Fungi.html (accessed January 1, 2013)
+    Pages/F/Fungi.html (accessed January 1, 2013)
 Kruszelnicki, Karl S. “Great Moments in Science—Fairy Rings.” Karl S. Kruszel-
-nicki Pty Ltd. http://www.abc.net.au/science/k2/moments/s297489.htm (accessed
-January 1, 2013)
+    nicki Pty Ltd. http://www.abc.net.au/science/k2/moments/s297489.htm (accessed
+    January 1, 2013)
 Lepp, Heino, and Murray Fagg. 2012. “The Mycelium.” Australian National Botanic
-Gardens. http://www.anbg.gov.au/fungi/mycelium.html (accessed January 1, 2013)
+    Gardens. http://www.anbg.gov.au/fungi/mycelium.html (accessed January 1, 2013)
 Rayner, Alan D. M. 1991. “Conflicting Flows: The Dynamics of Mycelial Territori-
-ality.” McIlvainea, 10: 24-3557-62.
+    ality.” McIlvainea, 10: 24-3557-62.
 '''
+
 from graphics import *
 import numpy as np
 import random
@@ -89,8 +57,15 @@ n = 20
 winDims = (m, n)
 win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
 
-# Random grid is the default initialization
+# Probability of spawning a spore. Used when initializing the grid and then for spawning spores from mushrooms.
 probSpore = 0.1
+
+# Rule used for spawning new spores from a mushroom.
+# 0 = All grid cells use probSpore, which is the mushroom coverage percentage.
+# 1 = A single cell uses probSpore, which is calculated based on number of mushroom neighbors.
+mushroomSporeSpawnRule = 0
+
+# Random grid is the default initialization
 grid = np.random.choice(a=[SPORE, EMPTY], size=winDims, p=[probSpore, 1-probSpore])
 
 # Other adjustables properties
@@ -100,16 +75,29 @@ numTimeSteps = 400
 # RANDOM    = 0
 # SINGLE    = 1
 # DOUBLE    = 2
-# QUAD      = 3
+# BOUNDARY  = 3
 def initGrid(type):
+
+    # Randomly placed spores, using probSpore
     if type == 0:
         grid = np.random.choice(a=[SPORE, EMPTY], size=winDims, p=[probSpore, 1-probSpore])
+
+    # Single spore in middle of grid
     elif type == 1:
         grid = np.ones(winDims) * EMPTY
+        grid[m / 2, n / 2] = SPORE
+
+    # Two spores separating each third of the grid
     elif type == 2:
-        filter
+        grid = np.ones(winDims) * EMPTY
+        grid[m / 3, n / 2] = SPORE
+        grid[2 * (m / 3), n / 2] = SPORE
+
+    # Single spore and impermeable barrier around grid
     elif type == 3:
-        filter
+        grid = np.ones(winDims) * EMPTY
+        grid[m / 2, n / 2] = SPORE
+        #...
 
 # Rather than using a spread constant, this method determines
 # whether spread occurs by using a multi-branch random walk,
@@ -138,12 +126,24 @@ def changeState(i, j):
         else:
             grid[i, j] = OLDER
 
+    '''
+    Adjust the simulation of this module so that new spores can form when
+    mushrooms are present. Consider the following two possibilities:
+    a.  The probability that a cell can obtain a spore at the next time period is
+        equal to the percentage of mushrooms in the grid.
+    b.  A cell can obtain a spore at the next time period with a specified probabil-
+        ity provided one of its neighbors contains a mushroom.
+    '''
     elif grid[i,j] == MUSHROOMS or grid[i,j] == OLDER:
         grid[i,j] = DECAYING
         
     elif grid[i,j] == DECAYING:
         grid[i,j] = DEAD1
-        
+    
+    '''
+    Do Project 1 so that the length of time the hyphae are dead is probabilistic;
+    and on the average, they are dead for two time steps.
+    '''
     elif grid[i,j] == DEAD1:
         grid[i,j] = DEAD2
         
@@ -156,6 +156,10 @@ def changeState(i, j):
 
 # Checks Moore neighborhood of cells for YOUNG values.
 # Assumes cell at [i, j] is already EMPTY
+'''
+Do Project 1 where the probability of young hyphae spreading into a site is
+proportional to the number of neighbors that contain young hyphae.
+'''
 def isNeighborYoung(i, j):
     return YOUNG in grid[i - 1:i + 1,j - 1:j + 1]
 
