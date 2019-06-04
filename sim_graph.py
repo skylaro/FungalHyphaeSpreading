@@ -1,21 +1,18 @@
 from graphics import *
-import time
 import model
 
 #User-adjustable parameters
 winTitle = "Mushroom Simulation"
-
 cellWidth = 15
-winDims = (80,20)
+winDims = (model.m, model.n)
 
 # Object variables
 win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
-win.setBackground('green')
 
 # Draw state to grid
-def drawState(d, x, y):
-	r = Point(cellWidth * x, cellWidth * y)
-	s = Point(cellWidth * x + cellWidth, cellWidth * y + cellWidth)
+def drawState(self, d, x, y):
+	r = Point(self.cellWidth * x, self.cellWidth * y)
+	s = Point(self.cellWidth * x + self.cellWidth, self.cellWidth * y + self.cellWidth)
 	t = Rectangle(r,s)
 	t.setFill(colorFromState(d))
 	t.draw(win)
@@ -49,13 +46,3 @@ def colorFromState(state):
 		return color_rgb(0,0.5,0)
 	elif state == model.INERT:
 		return color_rgb(1,1,0)
-
-
-# Runs an animation given a timestep value
-def animate(t):
-	while(True):
-		start = time.time()
-
-		end = time.time()
-		time.sleep(t - (end - start))
-	return

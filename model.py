@@ -62,9 +62,10 @@ ality.” McIlvainea, 10: 24-3557-62.
 
 import numpy as np
 import random
+import time
+import sim_graph as g
 
-#import interface
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 # Cell States
 EMPTY = 0
@@ -87,104 +88,124 @@ probSpread = 0.5
 probSpore = 0.5
 m = 30
 n = 30
-#grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore])
-#the 3 dimension is to store the (state, R, G, B)
+grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore])
+
+'''
+the 3 dimension is to store the (state, R, G, B)
 grid = np.zeros((m,n,4))
 
 grid[:,:,2] = 1
 grid[int(m/2),int(n/2),:] = 0
 grid[int(m/2),int(n/2),0] = 1
+'''
+
+# Other adjustables properties
+animationTimestep = 0.1
+numTimeSteps = 400
 
 # State diagram on p. 717
-def changeState(gridCopy,i, j):
-    if gridCopy[i,j,0] == SPORE:
+def changeState(i, j):
+    if grid[i,j] == SPORE:
         if random.random() < probSporeToHyphae:
-            grid[i, j,0] = YOUNG #DarkGrey 51,51,51
-            grid[i, j,1] = .20
-            grid[i, j,2] = .20
-            grid[i, j,3] = .20            
-    elif gridCopy[i,j,0] == YOUNG:
-        grid[i,j] = MATURING #Light Grey 178,178,178
-        grid[i, j,1] = .7
-        grid[i, j,2] = .7
-        grid[i, j,3] = .7        
-    elif gridCopy[i,j,0] == MATURING:
-        if random.random() < probMushroom:
-            grid[i, j,0] = MUSHROOMS #White 255,255,255
-            grid[i, j,1] = 1
-            grid[i, j,2] = 1
-            grid[i, j,3] = 1            
-        else:
-            grid[i, j,0] = OLDER #Light Grey 178,178,178
-            grid[i, j,1] = .7
-            grid[i, j,2] = .7
-            grid[i, j,3] = .7            
-    elif gridCopy[i,j,0] == MUSHROOMS or gridCopy[i,j,0] == OLDER:
-        grid[i,j] = DECAYING #Tan ---- 204,127,51
-        grid[i, j,1] = .80
-        grid[i, j,2] = .50
-        grid[i, j,3] = .2
-    elif gridCopy[i,j,0] == DECAYING:
-        grid[i,j] = DEAD1 #Brown ---- 178,51,0
-        grid[i, j,1] = .70
-        grid[i, j,2] = .20
-        grid[i, j,3] = .1        
-    elif gridCopy[i,j,0] == DEAD1:
-        grid[i,j] = DEAD2 #Dark Green ----0 102 0
-        grid[i, j,1] = 0
-        grid[i, j,2] = .4
-        grid[i, j,3] = 0
-    elif gridCopy[i,j,0] == DEAD2:
-        grid[i,j] = EMPTY #light Green 0,255,0
-        grid[i, j,1] = 0
-        grid[i, j,2] = 1
-        grid[i, j,3] = 0
-    elif gridCopy[i,j,0] == EMPTY:
-        neighborIsYoung = isYoungNear(gridCopy,i, j)
-        if (random.random() < probSpread) and neighborIsYoung:
-            grid[i, j,0] = YOUNG #DarkGrey 51,51,51
+            grid[i, j] = YOUNG
+
+            '''DarkGrey 51,51,51
             grid[i, j,1] = .20
             grid[i, j,2] = .20
             grid[i, j,3] = .20
-
-#checks gridCopy to see if any neibors are young
-#looks a van neuman
-def isYoungNear(gridCopy,i, j):
-    #checks bottom
-    if(i - 1 >= 0):
-        if gridCopy[i - 1, j,0] == YOUNG:
-            return True
-        if(j - 1 >= 0):
-            if gridCopy[i - 1, j - 1,0] == YOUNG:
-                return True
-        if(j + 1 < n):
-            if gridCopy[i - 1, j + 1,0] == YOUNG:
-                return True
-    
-    #checks top
-    if(i + 1 < m):
-        if gridCopy[i + 1, j,0] == YOUNG:
-            return True
-        if(j - 1 >= 0):
-            if gridCopy[i + 1, j - 1,0] == YOUNG:
-                return True
-        if(j + 1 < n):
-            if gridCopy[i + 1, j + 1,0] == YOUNG:
-                return True
-    #check middle
-    if(j - 1 >= 0):
-        if grid[i, j - 1,0] == YOUNG:
-            return True
-    if(j + 1 < n):
-        if grid[i, j + 1,0] == YOUNG:
-            return True   
-    
-    return False
+            '''         
+    elif grid[i,j] == YOUNG:
+        grid[i,j] = MATURING
         
-      
+        '''Light Grey 178,178,178
+        grid[i, j,1] = .7
+        grid[i, j,2] = .7
+        grid[i, j,3] = .7
+        '''    
+    elif grid[i,j] == MATURING:
+        if random.random() < probMushroom:
+            grid[i, j] = MUSHROOMS
+
+            '''White 255,255,255
+            grid[i, j,1] = 1
+            grid[i, j,2] = 1
+            grid[i, j,3] = 1
+            '''
+        else:
+            grid[i, j] = OLDER
+            
+            '''Light Grey 178,178,178
+            grid[i, j,1] = .7
+            grid[i, j,2] = .7
+            grid[i, j,3] = .7
+            '''
+    elif grid[i,j] == MUSHROOMS or grid[i,j] == OLDER:
+        grid[i,j] = DECAYING
+        
+        '''Tan ---- 204,127,51
+        grid[i, j,1] = .80
+        grid[i, j,2] = .50
+        grid[i, j,3] = .2
+        '''
+    elif grid[i,j] == DECAYING:
+        grid[i,j] = DEAD1
+        
+        '''Brown ---- 178,51,0
+        grid[i, j,1] = .70
+        grid[i, j,2] = .20
+        grid[i, j,3] = .1
+        '''
+    elif grid[i,j] == DEAD1:
+        grid[i,j] = DEAD2
+        
+        '''Dark Green ----0 102 0
+        grid[i, j,1] = 0
+        grid[i, j,2] = .4
+        grid[i, j,3] = 0
+        '''
+    elif grid[i,j] == DEAD2:
+        grid[i,j] = EMPTY
+        
+        '''light Green 0,255,0
+        grid[i, j,1] = 0
+        grid[i, j,2] = 1
+        grid[i, j,3] = 0
+        '''
+    elif grid[i,j] == EMPTY:
+        if (random.random() < probSpread) and isNeighborYoung(i,j):
+            grid[i, j] = YOUNG
+            
+            '''DarkGrey 51,51,51
+            grid[i, j,1] = .20
+            grid[i, j,2] = .20
+            grid[i, j,3] = .20
+            '''
+
+# Checks Moore neighborhood of cells for YOUNG values.
+# Assumes cell at [i, j] is already EMPTY
+def isNeighborYoung(i, j):
+    return YOUNG in grid[i - 1:i + 1,j - 1:j + 1]
+
+# Main program
+
+#Start by drawing initial state
+for i in range(m):
+        for j in range(n):
+            g.drawState(grid[i,j], i, j)
+
+# Draw each state change for k number of timesteps
+for k in range(numTimeSteps):
+    start = time.time()
+    for i in range(m):
+        for j in range(n):
+            changeState(i,j)
+            g.drawState(grid[i,j], i, j)
+    end = time.time()
+    time.sleep(animationTimestep - (end - start))
+
 #drive for the simulation 
 #for efficiency i commented out the plotting 
-                                                                 
+'''                                                            
 def simDrive():
     simDuration = 40
     timeStep = []
@@ -263,4 +284,4 @@ def show_grid(gridField, img = None, ax = None):
 
 
 simDrive()
-    
+'''
