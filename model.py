@@ -67,7 +67,7 @@ import sim_graph as g
 
 #import matplotlib.pyplot as plt
 
-# Cell States
+# Cell States Constant
 EMPTY = 0
 SPORE = 1
 YOUNG = 2
@@ -93,6 +93,7 @@ grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore
 '''
 the 3 dimension is to store the (state, R, G, B)
 grid = np.zeros((m,n,4))
+grid[:,:,2] = 1 #set background to green
 
 grid[:,:,2] = 1
 grid[int(m/2),int(n/2),:] = 0
@@ -209,6 +210,10 @@ for k in range(numTimeSteps):
 def simDrive():
     simDuration = 40
     timeStep = []
+    
+    #q1c()
+    q1b()
+    
     gridCopy = np.copy(grid)
     #print(gridCopy[:,:,0])
     img, ax = show_grid(grid)
@@ -216,27 +221,25 @@ def simDrive():
         for i in range(m):
             for j in range(n):
                 changeState(gridCopy, i,j)
-                
-        #print(ith)
-        #print(grid[:,:,0])
-        #print(gridCopy[:,:,0])
-        
-        
+
+
         gridCopy = np.copy(grid)
-        img, ax = show_grid(grid, img , ax)        
-        
+        img, ax = show_grid(grid, img , ax)
+
         #currentGrid = np.copy(grid)
         timeStep.append(gridCopy)
         #interface.animate(currentGrid)
         #print(grid[:,:,0])
+
+
 def show_grid(gridField, img = None, ax = None):
     """ This is the animation of the CA for fluid dynamics.
     in this method we make a 14 by 14 figure that is the shape of the channel. From our
     research on the Navier Equations we use U to show the what the current state of the water motion it is in.
     Gray means close to zero V.
-    
-    
-    
+
+
+
     """
     length = m
     width = n
@@ -245,18 +248,16 @@ def show_grid(gridField, img = None, ax = None):
     color = np.array([[0,255,0],[0,0,0],[25,25,25],[105,105,105],[255,255,255],[105,105,105],[245,245,220],[165,42,42],[0,100,0],[255,255,0]])
     #- Create figure and axes:
 
-    
-
 
     #- Set first display data values:
-    data[:,:, 0] = color[0,0] /255       
-    data[:,:, 1] = color[0,1] /255     
-    data[:,:, 2] = color[0,2] /255      
-    
+    data[:,:, 0] = color[0,0] /255
+    data[:,:, 1] = color[0,1] /255
+    data[:,:, 2] = color[0,2] /255
+
     #if the img is not set yet display initial values of no motion
     if img is None:
         fig = plt.figure()
-        ax = fig.add_axes( (0, 0, .5, .5), frameon=False )
+        ax = fig.add_axes( (0, 0, 1, 1), frameon=False )
 
         #- Draw image:
 
@@ -265,9 +266,9 @@ def show_grid(gridField, img = None, ax = None):
                 aspect="auto",
                 zorder=0)
 
-        plt.pause(2)
+        plt.pause(1)
 
-    
+
     #- Draw image:
     data[:,:,:] = grid[:,:,1:]
     img = ax.imshow(data, interpolation='none',
@@ -279,9 +280,20 @@ def show_grid(gridField, img = None, ax = None):
 
     ax.axis('off')
     plt.show()
-    plt.pause(1)
+    plt.pause(1.5)
     return img, ax
 
+"""Func to init the inert cells
+
+Based on the textbook, we can inialize randomly, create patterns like
+pavement on the roads, fountains in the center etc
+
+"""
+def initInertGrid(gridCopy):
+    # for i in range(m):
+    #     for j in range(n):
+    #
+    return None
 
 simDrive()
 '''
