@@ -62,8 +62,10 @@ ality.” McIlvainea, 10: 24-3557-62.
 
 import numpy as np
 import random
+
 #import interface
 import matplotlib.pyplot as plt
+
 # Cell States
 EMPTY = 0
 SPORE = 1
@@ -95,7 +97,6 @@ grid[int(m/2),int(n/2),0] = 1
 
 # State diagram on p. 717
 def changeState(gridCopy,i, j):
-    #
     if gridCopy[i,j,0] == SPORE:
         if random.random() < probSporeToHyphae:
             grid[i, j,0] = YOUNG #DarkGrey 51,51,51
@@ -145,8 +146,6 @@ def changeState(gridCopy,i, j):
             grid[i, j,1] = .20
             grid[i, j,2] = .20
             grid[i, j,3] = .20
-            
-
 
 #checks gridCopy to see if any neibors are young
 #looks a van neuman
