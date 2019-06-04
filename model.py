@@ -84,18 +84,32 @@ probSpread = 0.5
 # Grid initialization
 winTitle = "Mushroom Simulation"
 cellWidth = 15
-m = 100
-n = 100
+m = 20
+n = 20
 winDims = (m, n)
 win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
 
-# Random grid
+# Random grid is the default initialization
 probSpore = 0.1
 grid = np.random.choice(a=[SPORE, EMPTY], size=winDims, p=[probSpore, 1-probSpore])
 
 # Other adjustables properties
-animationTimestep = 0.1
 numTimeSteps = 400
+
+# Method to initialize a starting grid
+# RANDOM    = 0
+# SINGLE    = 1
+# DOUBLE    = 2
+# QUAD      = 3
+def initGrid(type):
+    if type == 0:
+        grid = np.random.choice(a=[SPORE, EMPTY], size=winDims, p=[probSpore, 1-probSpore])
+    elif type == 1:
+        grid = np.ones(winDims) * EMPTY
+    elif type == 2:
+        filter
+    elif type == 3:
+        filter
 
 # Rather than using a spread constant, this method determines
 # whether spread occurs by using a multi-branch random walk,
@@ -103,85 +117,42 @@ numTimeSteps = 400
 # linear distance required for spread from a center point.
 # 'numTrials' is the number of random walks to generate before returning.
 def randomSpread(dist, numTrials):
-    return
+    sumDist = 0
+    for i in range(numTrials):
+        sumDist += 1
+    return (sumDist / numTrials) >= dist
 
 # State diagram on p. 717
 def changeState(i, j):
     if grid[i,j] == SPORE:
         if random.random() < probSporeToHyphae:
             grid[i, j] = YOUNG
-
-            '''DarkGrey 51,51,51
-            grid[i, j,1] = .20
-            grid[i, j,2] = .20
-            grid[i, j,3] = .20
-            '''         
+    
     elif grid[i,j] == YOUNG:
         grid[i,j] = MATURING
         
-        '''Light Grey 178,178,178
-        grid[i, j,1] = .7
-        grid[i, j,2] = .7
-        grid[i, j,3] = .7
-        '''    
     elif grid[i,j] == MATURING:
         if random.random() < probMushroom:
             grid[i, j] = MUSHROOMS
 
-            '''White 255,255,255
-            grid[i, j,1] = 1
-            grid[i, j,2] = 1
-            grid[i, j,3] = 1
-            '''
         else:
             grid[i, j] = OLDER
-            
-            '''Light Grey 178,178,178
-            grid[i, j,1] = .7
-            grid[i, j,2] = .7
-            grid[i, j,3] = .7
-            '''
+
     elif grid[i,j] == MUSHROOMS or grid[i,j] == OLDER:
         grid[i,j] = DECAYING
         
-        '''Tan ---- 204,127,51
-        grid[i, j,1] = .80
-        grid[i, j,2] = .50
-        grid[i, j,3] = .2
-        '''
     elif grid[i,j] == DECAYING:
         grid[i,j] = DEAD1
         
-        '''Brown ---- 178,51,0
-        grid[i, j,1] = .70
-        grid[i, j,2] = .20
-        grid[i, j,3] = .1
-        '''
     elif grid[i,j] == DEAD1:
         grid[i,j] = DEAD2
         
-        '''Dark Green ----0 102 0
-        grid[i, j,1] = 0
-        grid[i, j,2] = .4
-        grid[i, j,3] = 0
-        '''
     elif grid[i,j] == DEAD2:
         grid[i,j] = EMPTY
         
-        '''light Green 0,255,0
-        grid[i, j,1] = 0
-        grid[i, j,2] = 1
-        grid[i, j,3] = 0
-        '''
     elif grid[i,j] == EMPTY:
         if (random.random() < probSpread) and isNeighborYoung(i,j):
             grid[i, j] = YOUNG
-            
-            '''DarkGrey 51,51,51
-            grid[i, j,1] = .20
-            grid[i, j,2] = .20
-            grid[i, j,3] = .20
-            '''
 
 # Checks Moore neighborhood of cells for YOUNG values.
 # Assumes cell at [i, j] is already EMPTY
