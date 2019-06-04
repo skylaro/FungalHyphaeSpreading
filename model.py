@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Mushroom model from book, using absorbing, reflecting, and periodic boundary conditions.
 S&S model was generated from information found in the following sources, which were also
@@ -122,7 +123,8 @@ def randomSpread(dist, numTrials):
 
 # State diagram on p. 717
 def changeState(i, j):
-
+    global probSpore
+    global numMushrooms
     # Check if neighbor cells have mushrooms and update spore spawn probability.
     if mushroomSporeSpawnRule == 1 and grid[i,j] != MUSHROOMS:
         probSpore = (grid[i - 1:i + 1,j - 1:j + 1] == MUSHROOMS).sum() / 8
