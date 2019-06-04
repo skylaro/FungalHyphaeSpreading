@@ -59,13 +59,10 @@ Gardens. http://www.anbg.gov.au/fungi/mycelium.html (accessed January 1, 2013)
 Rayner, Alan D. M. 1991. “Conflicting Flows: The Dynamics of Mycelial Territori-
 ality.” McIlvainea, 10: 24-3557-62.
 '''
-
+from graphics import *
 import numpy as np
 import random
 import time
-import sim_graph as g
-
-#import matplotlib.pyplot as plt
 
 # Cell States Constant
 EMPTY = 0
@@ -85,20 +82,16 @@ probMushroom = 0.5
 probSpread = 0.5
 
 # Grid initialization
-probSpore = 0.5
-m = 30
-n = 30
-grid = np.random.choice(a=[SPORE, EMPTY], size=(m, n), p=[probSpore, 1-probSpore])
+winTitle = "Mushroom Simulation"
+cellWidth = 15
+m = 100
+n = 100
+winDims = (m, n)
+win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
 
-'''
-the 3 dimension is to store the (state, R, G, B)
-grid = np.zeros((m,n,4))
-grid[:,:,2] = 1 #set background to green
-
-grid[:,:,2] = 1
-grid[int(m/2),int(n/2),:] = 0
-grid[int(m/2),int(n/2),0] = 1
-'''
+# Random grid
+probSpore = 0.1
+grid = np.random.choice(a=[SPORE, EMPTY], size=winDims, p=[probSpore, 1-probSpore])
 
 # Other adjustables properties
 animationTimestep = 0.1
@@ -195,22 +188,60 @@ def changeState(i, j):
 def isNeighborYoung(i, j):
     return YOUNG in grid[i - 1:i + 1,j - 1:j + 1]
 
+# Draw state to grid
+def drawState(d, x, y):
+	r = Point(cellWidth * x, cellWidth * y)
+	s = Point(cellWidth * x + cellWidth, cellWidth * y + cellWidth)
+	t = Rectangle(r,s)
+	t.setFill(colorFromState(d))
+	t.draw(win)
+
+# EMPTY: Light Green
+# SPORE: Black
+# YOUNG: Dark Grey
+# MATURING: Light Grey
+# MUSHROOMS: White
+# OLDER: Light Grey
+# DECAYING: Tan
+# DEAD1: Brown
+# DEAD2: Dark Green
+# INERT: Yellow
+def colorFromState(state):
+	if state == EMPTY:
+		return color_rgb(0,255,0)
+	if state == SPORE:
+		return color_rgb(0,0,0)
+	elif state == YOUNG:
+		return color_rgb(64,64,64)
+	elif state == MATURING or state == OLDER:
+		return color_rgb(192,192,192)
+	elif state == MUSHROOMS:
+		return color_rgb(255,255,255)
+	elif state == DECAYING:
+		return color_rgb(255,255,128)
+	elif state == DEAD1:
+		return color_rgb(128,128,0)
+	elif state == DEAD2:
+		return color_rgb(0,128,0)
+	elif state == INERT:
+		return color_rgb(255,255,0)
+
 # Main program
 
 #Start by drawing initial state
 for i in range(m):
         for j in range(n):
-            g.drawState(grid[i,j], i, j)
+            drawState(grid[i,j], i, j)
 
 # Draw each state change for k number of timesteps
 for k in range(numTimeSteps):
-    start = time.time()
+    #start = time.time()
     for i in range(m):
         for j in range(n):
             changeState(i,j)
-            g.drawState(grid[i,j], i, j)
-    end = time.time()
-    time.sleep(animationTimestep - (end - start))
+            drawState(grid[i,j], i, j)
+    #end = time.time()
+    #time.sleep(animationTimestep - (end - start))
 
 #drive for the simulation 
 #for efficiency i commented out the plotting 
