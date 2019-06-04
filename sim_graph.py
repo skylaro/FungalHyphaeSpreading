@@ -10,9 +10,9 @@ winDims = (model.m, model.n)
 win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
 
 # Draw state to grid
-def drawState(self, d, x, y):
-	r = Point(self.cellWidth * x, self.cellWidth * y)
-	s = Point(self.cellWidth * x + self.cellWidth, self.cellWidth * y + self.cellWidth)
+def drawState(d, x, y):
+	r = Point(cellWidth * x, cellWidth * y)
+	s = Point(cellWidth * x + cellWidth, cellWidth * y + cellWidth)
 	t = Rectangle(r,s)
 	t.setFill(colorFromState(d))
 	t.draw(win)

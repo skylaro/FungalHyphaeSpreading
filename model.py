@@ -104,6 +104,14 @@ grid[int(m/2),int(n/2),0] = 1
 animationTimestep = 0.1
 numTimeSteps = 400
 
+# Rather than using a spread constant, this method determines
+# whether spread occurs by using a multi-branch random walk,
+# similar to how mycelium actually spreads. 'dist' is the minimum
+# linear distance required for spread from a center point.
+# 'numTrials' is the number of random walks to generate before returning.
+def randomSpread(dist, numTrials):
+    return
+
 # State diagram on p. 717
 def changeState(i, j):
     if grid[i,j] == SPORE:
