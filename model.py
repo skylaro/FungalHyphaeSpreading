@@ -48,7 +48,6 @@ INERT = 9
 # Update Probabilities
 probSporeToHyphae = 0.5
 probMushroom = 0.5
-probSpread = 0.5
 
 # Grid initialization
 winTitle = "Mushroom Simulation"
@@ -106,8 +105,16 @@ def initGrid(t):
     # Single spore and impermeable barrier around grid
     elif t == 3:
         grid = np.ones(winDims) * EMPTY
-        grid[m / 2, n / 2] = SPORE
-        #...
+        x = (int) (m / 2)
+        y = (int) (n / 2)
+        grid[x, y] = SPORE
+
+        # Make inert grid around edges
+        grid[:,0] = INERT
+        grid[:,-1] = INERT
+        grid[0,:] = INERT
+        grid[-1,:] = INERT
+
         return grid
 
 # Rather than using a spread constant, this method determines
@@ -139,9 +146,11 @@ def changeState(i, j):
     elif random.random() < probSpore and grid[i,j] != INERT:
         grid[i,j] = SPORE
 
+    # Turn all young hyphae into maturing hyphae after a single timestep
     elif grid[i,j] == YOUNG:
         grid[i,j] = MATURING
-        
+    
+    # A maturing hyphae has the chance of fruiting a mushroom. Otherwise, it ages.
     elif grid[i,j] == MATURING:
         if random.random() < probMushroom:
             grid[i, j] = MUSHROOMS
@@ -153,9 +162,11 @@ def changeState(i, j):
         else:
             grid[i, j] = OLDER
 
+    # All mushrooms and old hyphae start to decay after one timestep.
     elif grid[i,j] == MUSHROOMS or grid[i,j] == OLDER:
         grid[i,j] = DECAYING
-        
+    
+    # All decaying hyphae will die after one timestep.
     elif grid[i,j] == DECAYING:
         grid[i,j] = DEAD1
     
@@ -167,16 +178,17 @@ def changeState(i, j):
     elif grid[i,j] == DEAD2:
         grid[i,j] = EMPTY
     
-    # Do Project 1 where the probability of young hyphae spreading into a site is
-    # proportional to the number of neighbors that contain young hyphae.
     elif grid[i,j] == EMPTY:
-        if (random.random() < probSpread) and isNeighborYoung(i,j):
+        if random.random() < isNeighborYoung(i,j):
             grid[i, j] = YOUNG
 
-# Checks Moore neighborhood of cells for YOUNG values.
+# Checks Moore neighborhood of cells for YOUNG values and returns new probSpread value.
+# Modifies project in S&S to use a dynamic rather than constant probability.
 # Assumes cell at [i, j] is already EMPTY
 def isNeighborYoung(i, j):
-    return YOUNG in grid[i - 1:i + 1,j - 1:j + 1]
+    if grid[i,j] != EMPTY:
+        return 0
+    return (grid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() / 8.0
 
 # Draw state to grid
 def drawState(d, x, y):
@@ -217,7 +229,7 @@ def colorFromState(state):
 		return color_rgb(255,255,0)
 
 # Main program
-grid = initGrid(2)
+grid = initGrid(3)
 
 #Start by drawing initial state
 for i in range(m):
