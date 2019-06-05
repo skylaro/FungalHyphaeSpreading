@@ -58,7 +58,7 @@ winDims = (m, n)
 win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
 
 # Probability of spawning a spore. Used when initializing the grid and then for spawning spores from mushrooms.
-probSpore = 0.1
+probSpore = 0.7
 
 # Rule used for spawning new spores from a mushroom.
 # 0 = All grid cells use probSpore, which is the mushroom coverage percentage.
@@ -72,7 +72,7 @@ numMushrooms = 0
 grid = -1 * np.ones(winDims)
 
 # Other adjustables properties
-numTimeSteps = 400
+numTimeSteps = 15
 
 # Method to initialize a starting grid
 # RANDOM    = 0
@@ -129,29 +129,29 @@ def randomSpread(dist, numTrials):
     return (sumDist / numTrials) >= dist
 
 # State diagram on p. 717
-def changeState(i, j):
+def changeState(copyGrid, i, j):
     global probSpore
     global numMushrooms
     # Check if neighbor cells have mushrooms and update spore spawn probability.
     if mushroomSporeSpawnRule == 1 and grid[i,j] != MUSHROOMS:
         probSpore = (grid[i - 1:i + 1,j - 1:j + 1] == MUSHROOMS).sum() / 8
 
-    if grid[i,j] == SPORE:
+    if copyGrid[i,j] == SPORE:
         if random.random() < probSporeToHyphae:
             grid[i, j] = YOUNG
 
     # Modification of state diagram to include spawning of new spores on
     # any kind of ground except inert ground. Code branch applies to both
     # spore spawn rules.
-    elif random.random() < probSpore and grid[i,j] != INERT:
+    elif random.random() < probSpore and copyGrid[i,j] != INERT:
         grid[i,j] = SPORE
 
     # Turn all young hyphae into maturing hyphae after a single timestep
-    elif grid[i,j] == YOUNG:
+    elif copyGrid[i,j] == YOUNG:
         grid[i,j] = MATURING
     
     # A maturing hyphae has the chance of fruiting a mushroom. Otherwise, it ages.
-    elif grid[i,j] == MATURING:
+    elif copyGrid[i,j] == MATURING:
         if random.random() < probMushroom:
             grid[i, j] = MUSHROOMS
 
@@ -163,32 +163,32 @@ def changeState(i, j):
             grid[i, j] = OLDER
 
     # All mushrooms and old hyphae start to decay after one timestep.
-    elif grid[i,j] == MUSHROOMS or grid[i,j] == OLDER:
+    elif copyGrid[i,j] == MUSHROOMS or copyGrid[i,j] == OLDER:
         grid[i,j] = DECAYING
     
     # All decaying hyphae will die after one timestep.
-    elif grid[i,j] == DECAYING:
+    elif copyGrid[i,j] == DECAYING:
         grid[i,j] = DEAD1
     
     # Do Project 1 so that the length of time the hyphae are dead is probabilistic;
     # and on the average, they are dead for two time steps.
-    elif grid[i,j] == DEAD1:
+    elif copyGrid[i,j] == DEAD1:
         grid[i,j] = DEAD2
         
-    elif grid[i,j] == DEAD2:
+    elif copyGrid[i,j] == DEAD2:
         grid[i,j] = EMPTY
     
-    elif grid[i,j] == EMPTY:
-        if random.random() < isNeighborYoung(i,j):
+    elif copyGrid[i,j] == EMPTY:
+        if random.random() < isNeighborYoung(copyGrid,i,j):
             grid[i, j] = YOUNG
 
 # Checks Moore neighborhood of cells for YOUNG values and returns new probSpread value.
 # Modifies project in S&S to use a dynamic rather than constant probability.
 # Assumes cell at [i, j] is already EMPTY
-def isNeighborYoung(i, j):
-    if grid[i,j] != EMPTY:
+def isNeighborYoung(copyGrid,i, j):
+    if copyGrid[i,j] != EMPTY:
         return 0
-    return (grid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() / 8.0
+    return (copyGrid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() / 4.0
 
 # Draw state to grid
 def drawState(d, x, y):
@@ -229,7 +229,7 @@ def colorFromState(state):
 		return color_rgb(255,255,0)
 
 # Main program
-grid = initGrid(3)
+grid = initGrid(2)
 
 #Start by drawing initial state
 for i in range(m):
@@ -237,17 +237,19 @@ for i in range(m):
             drawState(grid[i,j], i, j)
 
 # Configure spore spawning after initial grid is made
-probSpore = 0.0
+probSpore = 0
 
 # Draw each state change for k number of timesteps
 for k in range(numTimeSteps):
+    copyGrid = np.copy(grid)
     for i in range(m):
         for j in range(n):
-            changeState(i,j)
+            changeState(copyGrid,i,j)
             drawState(grid[i,j], i, j)
+
 
     # Calculate spore spawn probability and reset mushroom counter.
     # Only used with spore spawn rule 0
     if mushroomSporeSpawnRule == 0:
-        probSpore = numMushrooms / (m * n)
+        #probSpore = numMushrooms / (m * n)
         numMushrooms = 0
