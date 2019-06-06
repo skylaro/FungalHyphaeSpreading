@@ -29,6 +29,7 @@ Rayner, Alan D. M. 1991. “Conflicting Flows: The Dynamics of Mycelial Territor
 '''
 
 from graphics import *
+import matplotlib.pyplot as plt
 import numpy as np
 import random
 import time
@@ -68,18 +69,21 @@ mushroomSporeSpawnRule = 1
 
 #Choose wether the probSpread to be constant or dynamic. Dynamic spread value
 #is set by the number of neighbor that is YOUNG divided by neighbor
-# 0 = CONSTANT 
+# 0 = CONSTANT
 # 1 = Dynamic
 mushroomSpreadRule = 0
 
 # Used with spore spawn rule 0 after each timestep to calculate new probSpore value.
 numMushrooms = 0
 
+
 # Null grid has all -1s
 grid = -1 * np.ones(winDims)
 
 # Other adjustables properties
-numTimeSteps = 17
+numTimeSteps = 15
+numSimulations = 1
+initRule = 1
 
 # Method to initialize a starting grid
 # RANDOM    = 0
@@ -123,8 +127,8 @@ def initGrid(t):
         grid[-1,:] = INERT
 
         return grid
-        
-    #single spore and a clump of INERT barriers on the other side of grid    
+
+    #single spore and a clump of INERT barriers on the other side of grid
     elif t == 4:
         grid = np.ones(winDims) * EMPTY
         x = (int) (m / 2)
@@ -133,9 +137,9 @@ def initGrid(t):
 
         # Make an inert grid clump
         grid[(int)(3*m/5):(int)(m),(int)(1*n/5):(int)(4*n/5)] = INERT
-        
+
         return grid
-        
+
 
 # Rather than using a spread constant, this method determines
 # whether spread occurs by using a multi-branch random walk,
@@ -154,10 +158,10 @@ def randomSpread(dist, numTrials):
 def changeState(copyGrid, i, j):
     global probSpore
     global numMushrooms
-    
+
     # Check if neighbor cells have mushrooms and update spore spawn probability.
-    if mushroomSporeSpawnRule == 1 and grid[i,j] != MUSHROOMS:
-        probSpore = (grid[i - 1:i + 1,j - 1:j + 1] == MUSHROOMS).sum() / 8
+    if mushroomSporeSpawnRule == 1 and copyGrid[i,j] != MUSHROOMS:
+        probSpore = (copyGrid[i - 1:i + 1,j - 1:j + 1] == MUSHROOMS).sum() / 8
 
     if copyGrid[i,j] == SPORE:
         if random.random() < probSporeToHyphae:
@@ -172,7 +176,7 @@ def changeState(copyGrid, i, j):
     # Turn all young hyphae into maturing hyphae after a single timestep
     elif copyGrid[i,j] == YOUNG:
         grid[i,j] = MATURING
-    
+
     # A maturing hyphae has the chance of fruiting a mushroom. Otherwise, it ages.
     elif copyGrid[i,j] == MATURING:
         if random.random() < probMushroom:
@@ -188,19 +192,23 @@ def changeState(copyGrid, i, j):
     # All mushrooms and old hyphae start to decay after one timestep.
     elif copyGrid[i,j] == MUSHROOMS or copyGrid[i,j] == OLDER:
         grid[i,j] = DECAYING
-    
+        # Decrement the number of mushrooms if a mushroom started decaying
+        # and if spore spawning uses this rule
+        if mushroomSporeSpawnRule == 0 and copyGrid[i,j] == MUSHROOMS:
+            numMushrooms = numMushrooms - 1
+
     # All decaying hyphae will die after one timestep.
     elif copyGrid[i,j] == DECAYING:
         grid[i,j] = DEAD1
-    
+
     # Do Project 1 so that the length of time the hyphae are dead is probabilistic;
     # and on the average, they are dead for two time steps.
     elif copyGrid[i,j] == DEAD1:
         grid[i,j] = DEAD2
-        
+
     elif copyGrid[i,j] == DEAD2:
         grid[i,j] = EMPTY
-    
+
     elif copyGrid[i,j] == EMPTY:
         if random.random() < isNeighborYoung(copyGrid,i,j):
             grid[i, j] = YOUNG
@@ -209,7 +217,7 @@ def changeState(copyGrid, i, j):
 # Modifies project in S&S to use a dynamic rather than constant probability.
 # Assumes cell at [i, j] is already EMPTY
 def isNeighborYoung(copyGrid,i, j):
-    
+
     if copyGrid[i,j] != EMPTY:
         return 0
     if mushroomSpreadRule == 0 and (copyGrid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() > 0:
@@ -258,28 +266,52 @@ def colorFromState(state):
 		return color_rgb(255,255,0)
 
 # Main program
-grid = initGrid(4)
 
-#Start by drawing initial state
-for i in range(m):
-        for j in range(n):
-            drawState(grid[i,j], i, j)
+# Number of mushrooms at each step of each simulation
+sims = np.zeros((numSimulations, numTimeSteps))
+# Run 'numSimulations' sims
+for s in range(numSimulations):
+    grid = initGrid(initRule)
+    numMushrooms = 0
 
-# Configure spore spawning after initial grid is made
-probSpore = 0
-
-
-# Draw each state change for k number of timesteps
-for k in range(numTimeSteps):
-    copyGrid = np.copy(grid)
+    #Start by drawing initial state
     for i in range(m):
-        for j in range(n):
-            changeState(copyGrid,i,j)
-            drawState(grid[i,j], i, j)
+            for j in range(n):
+                drawState(grid[i,j], i, j)
+
+    # Configure spore spawning after initial grid is made
+    probSpore = 0
+
+    # Store the number of mushrooms at each time step
+    mushrooms = np.zeros(numTimeSteps)
+
+    # Draw each state change for k number of timesteps
+    for k in range(numTimeSteps):
+        copyGrid = np.copy(grid)
+        for i in range(m):
+            for j in range(n):
+                changeState(copyGrid, i, j)
+                drawState(grid[i,j], i, j)
+        mushrooms[k] = numMushrooms
 
 
-    # Calculate spore spawn probability and reset mushroom counter.
-    # Only used with spore spawn rule 0
-    if mushroomSporeSpawnRule == 0:
-        probSpore = numMushrooms / (m * n)
-        numMushrooms = 0
+        # Calculate spore spawn probability and reset mushroom counter.
+        # Only used with spore spawn rule 0
+        if mushroomSporeSpawnRule == 0:
+            probSpore = numMushrooms / (m * n)
+            #numMushrooms = 0
+    # Add current run to array of all sims
+    sims[s] = mushrooms
+
+# Mushroom count analysis
+data = np.zeros(numTimeSteps)
+# Get average number of mushrooms at each step across all sims
+for i in range(numTimeSteps):
+    data[i] = np.sum(sims[:,i]) / numSimulations
+
+plt.plot(data)
+plt.xlabel("Time step")
+plt.ylabel("Number of mushrooms")
+plt.text(0.75 * numTimeSteps, 0.1 * np.max(data), "t="+str(initRule))
+plt.axes([0, numTimeSteps, 0, np.max(data)])
+plt.show()
