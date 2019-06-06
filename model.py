@@ -46,24 +46,31 @@ DEAD2 = 8
 INERT = 9
 
 # Update Probabilities
-probSporeToHyphae = 0.5
-probMushroom = 0.5
+probSporeToHyphae = 0.6
+probMushroom = 0.6
+probSpread = 0.6
 
 # Grid initialization
 winTitle = "Mushroom Simulation"
 cellWidth = 15
-m = 20
-n = 20
+m = 25
+n = 25
 winDims = (m, n)
 win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
 
 # Probability of spawning a spore. Used when initializing the grid and then for spawning spores from mushrooms.
-probSpore = 0.7
+probSpore = 0
 
 # Rule used for spawning new spores from a mushroom.
 # 0 = All grid cells use probSpore, which is the mushroom coverage percentage.
 # 1 = A single cell uses probSpore, which is calculated based on number of mushroom neighbors.
-mushroomSporeSpawnRule = 0
+mushroomSporeSpawnRule = 1
+
+#Choose wether the probSpread to be constant or dynamic. Dynamic spread value
+#is set by the number of neighbor that is YOUNG divided by neighbor
+# 0 = CONSTANT 
+# 1 = Dynamic
+mushroomSpreadRule = 0
 
 # Used with spore spawn rule 0 after each timestep to calculate new probSpore value.
 numMushrooms = 0
@@ -72,7 +79,7 @@ numMushrooms = 0
 grid = -1 * np.ones(winDims)
 
 # Other adjustables properties
-numTimeSteps = 15
+numTimeSteps = 17
 
 # Method to initialize a starting grid
 # RANDOM    = 0
@@ -116,6 +123,19 @@ def initGrid(t):
         grid[-1,:] = INERT
 
         return grid
+        
+    #single spore and a clump of INERT barriers on the other side of grid    
+    elif t == 4:
+        grid = np.ones(winDims) * EMPTY
+        x = (int) (m / 2)
+        y = (int) (n / 2)
+        grid[x, y] = SPORE
+
+        # Make an inert grid clump
+        grid[(int)(3*m/5):(int)(m),(int)(1*n/5):(int)(4*n/5)] = INERT
+        
+        return grid
+        
 
 # Rather than using a spread constant, this method determines
 # whether spread occurs by using a multi-branch random walk,
@@ -128,10 +148,13 @@ def randomSpread(dist, numTrials):
         sumDist += 1
     return (sumDist / numTrials) >= dist
 
+
+
 # State diagram on p. 717
 def changeState(copyGrid, i, j):
     global probSpore
     global numMushrooms
+    
     # Check if neighbor cells have mushrooms and update spore spawn probability.
     if mushroomSporeSpawnRule == 1 and grid[i,j] != MUSHROOMS:
         probSpore = (grid[i - 1:i + 1,j - 1:j + 1] == MUSHROOMS).sum() / 8
@@ -186,9 +209,15 @@ def changeState(copyGrid, i, j):
 # Modifies project in S&S to use a dynamic rather than constant probability.
 # Assumes cell at [i, j] is already EMPTY
 def isNeighborYoung(copyGrid,i, j):
+    
     if copyGrid[i,j] != EMPTY:
         return 0
-    return (copyGrid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() / 4.0
+    if mushroomSpreadRule == 0 and (copyGrid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() > 0:
+        return probSpread
+    elif mushroomSpreadRule == 1:
+        return (copyGrid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() / 8.0
+    else:
+        return 0
 
 # Draw state to grid
 def drawState(d, x, y):
@@ -229,7 +258,7 @@ def colorFromState(state):
 		return color_rgb(255,255,0)
 
 # Main program
-grid = initGrid(2)
+grid = initGrid(4)
 
 #Start by drawing initial state
 for i in range(m):
@@ -238,6 +267,7 @@ for i in range(m):
 
 # Configure spore spawning after initial grid is made
 probSpore = 0
+
 
 # Draw each state change for k number of timesteps
 for k in range(numTimeSteps):
@@ -251,5 +281,5 @@ for k in range(numTimeSteps):
     # Calculate spore spawn probability and reset mushroom counter.
     # Only used with spore spawn rule 0
     if mushroomSporeSpawnRule == 0:
-        #probSpore = numMushrooms / (m * n)
+        probSpore = numMushrooms / (m * n)
         numMushrooms = 0
