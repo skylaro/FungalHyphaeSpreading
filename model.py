@@ -29,6 +29,7 @@ Rayner, Alan D. M. 1991. “Conflicting Flows: The Dynamics of Mycelial Territor
 '''
 
 from graphics import *
+import matplotlib.pyplot as plt
 import numpy as np
 import random
 import time
@@ -48,6 +49,7 @@ INERT = 9
 # Update Probabilities
 probSporeToHyphae = 0.5
 probMushroom = 0.5
+probSpread = 0.5
 
 # Grid initialization
 winTitle = "Mushroom Simulation"
@@ -58,7 +60,7 @@ winDims = (m, n)
 win= GraphWin(width=winDims[0] * cellWidth, height=winDims[1] * cellWidth,title=winTitle)
 
 # Probability of spawning a spore. Used when initializing the grid and then for spawning spores from mushrooms.
-probSpore = 0.7
+probSpore = 0.2
 
 # Rule used for spawning new spores from a mushroom.
 # 0 = All grid cells use probSpore, which is the mushroom coverage percentage.
@@ -68,11 +70,14 @@ mushroomSporeSpawnRule = 0
 # Used with spore spawn rule 0 after each timestep to calculate new probSpore value.
 numMushrooms = 0
 
+
 # Null grid has all -1s
 grid = -1 * np.ones(winDims)
 
 # Other adjustables properties
 numTimeSteps = 15
+numSimulations = 1
+initRule = 1
 
 # Method to initialize a starting grid
 # RANDOM    = 0
@@ -133,8 +138,8 @@ def changeState(copyGrid, i, j):
     global probSpore
     global numMushrooms
     # Check if neighbor cells have mushrooms and update spore spawn probability.
-    if mushroomSporeSpawnRule == 1 and grid[i,j] != MUSHROOMS:
-        probSpore = (grid[i - 1:i + 1,j - 1:j + 1] == MUSHROOMS).sum() / 8
+    if mushroomSporeSpawnRule == 1 and copyGrid[i,j] != MUSHROOMS:
+        probSpore = (copyGrid[i - 1:i + 1,j - 1:j + 1] == MUSHROOMS).sum() / 8
 
     if copyGrid[i,j] == SPORE:
         if random.random() < probSporeToHyphae:
@@ -165,6 +170,10 @@ def changeState(copyGrid, i, j):
     # All mushrooms and old hyphae start to decay after one timestep.
     elif copyGrid[i,j] == MUSHROOMS or copyGrid[i,j] == OLDER:
         grid[i,j] = DECAYING
+        # Decrement the number of mushrooms if a mushroom started decaying
+        # and if spore spawning uses this rule
+        if mushroomSporeSpawnRule == 0 and copyGrid[i,j] == MUSHROOMS:
+            numMushrooms = numMushrooms - 1
     
     # All decaying hyphae will die after one timestep.
     elif copyGrid[i,j] == DECAYING:
@@ -188,7 +197,10 @@ def changeState(copyGrid, i, j):
 def isNeighborYoung(copyGrid,i, j):
     if copyGrid[i,j] != EMPTY:
         return 0
-    return (copyGrid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() / 4.0
+    #return (copyGrid[i - 1:i + 2,j - 1:j + 2] == YOUNG).sum() / 4.0
+    if (copyGrid[i-1:i+2,j-1:j+2] == YOUNG).sum() > 0:
+        return probSpread
+    return 0
 
 # Draw state to grid
 def drawState(d, x, y):
@@ -229,27 +241,52 @@ def colorFromState(state):
 		return color_rgb(255,255,0)
 
 # Main program
-grid = initGrid(2)
 
-#Start by drawing initial state
-for i in range(m):
-        for j in range(n):
-            drawState(grid[i,j], i, j)
+# Number of mushrooms at each step of each simulation
+sims = np.zeros((numSimulations, numTimeSteps))
+# Run 'numSimulations' sims
+for s in range(numSimulations):
+    grid = initGrid(initRule)
+    numMushrooms = 0
 
-# Configure spore spawning after initial grid is made
-probSpore = 0
-
-# Draw each state change for k number of timesteps
-for k in range(numTimeSteps):
-    copyGrid = np.copy(grid)
+    #Start by drawing initial state
     for i in range(m):
-        for j in range(n):
-            changeState(copyGrid,i,j)
-            drawState(grid[i,j], i, j)
+            for j in range(n):
+                drawState(grid[i,j], i, j)
+
+    # Configure spore spawning after initial grid is made
+    probSpore = 0
+
+    # Store the number of mushrooms at each time step
+    mushrooms = np.zeros(numTimeSteps)
+
+    # Draw each state change for k number of timesteps
+    for k in range(numTimeSteps):
+        copyGrid = np.copy(grid)
+        for i in range(m):
+            for j in range(n):
+                changeState(copyGrid, i, j)
+                drawState(grid[i,j], i, j)
+        mushrooms[k] = numMushrooms
 
 
-    # Calculate spore spawn probability and reset mushroom counter.
-    # Only used with spore spawn rule 0
-    if mushroomSporeSpawnRule == 0:
-        #probSpore = numMushrooms / (m * n)
-        numMushrooms = 0
+        # Calculate spore spawn probability and reset mushroom counter.
+        # Only used with spore spawn rule 0
+        if mushroomSporeSpawnRule == 0:
+            probSpore = numMushrooms / (m * n)
+            #numMushrooms = 0
+    # Add current run to array of all sims
+    sims[s] = mushrooms
+    
+# Mushroom count analysis
+data = np.zeros(numTimeSteps)
+# Get average number of mushrooms at each step across all sims
+for i in range(numTimeSteps):
+    data[i] = np.sum(sims[:,i]) / numSimulations
+
+plt.plot(data)
+plt.xlabel("Time step")
+plt.ylabel("Number of mushrooms")
+plt.text(0.75 * numTimeSteps, 0.1 * np.max(data), "t="+str(initRule))
+plt.axes([0, numTimeSteps, 0, np.max(data)])
+plt.show()
