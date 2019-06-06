@@ -67,6 +67,13 @@ probSpore = 0
 # 1 = A single cell uses probSpore, which is calculated based on number of mushroom neighbors.
 mushroomSporeSpawnRule = 1
 
+# Rule used for spreading young hyphae.
+# 0 = Constant probaility (probSpread)
+# 1 = Bounded random walk check (bool)
+spreadRule = 0
+randWalkDist = 20
+numRandWalkSteps = 40
+
 #Choose wether the probSpread to be constant or dynamic. Dynamic spread value
 #is set by the number of neighbor that is YOUNG divided by neighbor
 # 0 = CONSTANT
@@ -75,7 +82,6 @@ mushroomSpreadRule = 0
 
 # Used with spore spawn rule 0 after each timestep to calculate new probSpore value.
 numMushrooms = 0
-
 
 # Null grid has all -1s
 grid = -1 * np.ones(winDims)
@@ -143,16 +149,24 @@ def initGrid(t):
 
 # Rather than using a spread constant, this method determines
 # whether spread occurs by using a multi-branch random walk,
-# similar to how mycelium actually spreads. 'dist' is the minimum
-# linear distance required for spread from a center point.
+# similar to how mycelium actually spreads.
+# 'dist' is the minimum linear distance required for spread from a center point.
 # 'numTrials' is the number of random walks to generate before returning.
 def randomSpread(dist, numTrials):
-    sumDist = 0
+    sumX = 0
+    sumY = 0
     for i in range(numTrials):
-        sumDist += 1
-    return (sumDist / numTrials) >= dist
-
-
+        x = np.random.randint(2)
+        y = np.random.randint(2)
+        if not x:
+            sumX -= 1
+        else:
+            sumX += 1
+        if not y:
+            sumY -= 1
+        else:
+            sumY += 1
+    return np.sqrt(sumX**2 + sumY**2) >= dist
 
 # State diagram on p. 717
 def changeState(copyGrid, i, j):
@@ -201,8 +215,6 @@ def changeState(copyGrid, i, j):
     elif copyGrid[i,j] == DECAYING:
         grid[i,j] = DEAD1
 
-    # Do Project 1 so that the length of time the hyphae are dead is probabilistic;
-    # and on the average, they are dead for two time steps.
     elif copyGrid[i,j] == DEAD1:
         grid[i,j] = DEAD2
 
@@ -210,7 +222,11 @@ def changeState(copyGrid, i, j):
         grid[i,j] = EMPTY
 
     elif copyGrid[i,j] == EMPTY:
-        if random.random() < isNeighborYoung(copyGrid,i,j):
+
+        # Use probSpread probability
+        if spreadRule == 0 and random.random() < isNeighborYoung(copyGrid,i,j):
+            grid[i, j] = YOUNG
+        elif randomSpread(randWalkDist, numRandWalkSteps):
             grid[i, j] = YOUNG
 
 # Checks Moore neighborhood of cells for YOUNG values and returns new probSpread value.
